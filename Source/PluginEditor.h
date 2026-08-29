@@ -69,6 +69,7 @@ private:
     juce::Label       titleLabel, seedLabel, hintLabel;
     juce::ComboBox    genreBox, barsBox, noteMapBox;
     IconButton        generateButton;
+    IconButton        surpriseButton;
     juce::TextButton  playButton { "PLAY" };
     juce::ToggleButton fillsButton { "Fills" };
 

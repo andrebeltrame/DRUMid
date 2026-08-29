@@ -207,6 +207,33 @@ int main()
             check (busiestTomPerBar >= 6, "techno's rolling tom keeps its density");
         }
 
+        // The budget must respect who the lead voice is. In afro house that is
+        // the percussion; in techno it is the offbeat hat.
+        {
+            auto average = [] (Genre genre, LaneId lane)
+            {
+                int total = 0;
+
+                for (int t = 0; t < 16; ++t)
+                    total += makeKit (genre, 0.6f, 0.5f, 900 + t, 2)
+                                 .patterns[(size_t) lane].hitCount();
+
+                return (float) total / 16.0f;
+            };
+
+            const float afroPerc = average (Genre::AfroHouse, LaneId::Percussion);
+            const float afroHat  = average (Genre::AfroHouse, LaneId::ClosedHat);
+            const float techPerc = average (Genre::Techno,    LaneId::Percussion);
+            const float techHat  = average (Genre::Techno,    LaneId::ClosedHat);
+
+            std::printf ("       afro   perc %.1f vs hat %.1f\n", afroPerc, afroHat);
+            std::printf ("       techno perc %.1f vs hat %.1f\n", techPerc, techHat);
+
+            check (afroPerc > 4.0f, "afro house percussion is never starved to a fill");
+            check (afroPerc > afroHat * 0.6f, "afro house lets the congas hold their ground");
+            check (techHat > techPerc, "techno still gives the hat priority");
+        }
+
         // Swing has to be real micro-timing, not a quantised lie.
         float maxMicro = 0.0f;
 

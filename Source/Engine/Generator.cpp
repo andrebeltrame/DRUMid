@@ -504,6 +504,64 @@ static void applyGenreGuards (LanePattern& p, LaneId lane, const GenSettings& s)
         p.steps[(size_t) i].clear();
 }
 
+/** How much a lane matters to a genre, used to decide who gives up hits when
+    the kit is over budget.
+
+    Without this the budget just thins whoever is busiest, which means the hi-hat
+    - naturally the densest lane - starves the congas in afro house. That is
+    exactly backwards: there the percussion is the lead voice and the hat is the
+    one that should step back.
+*/
+static float laneImportance (Genre genre, LaneId lane)
+{
+    switch (genre)
+    {
+        case Genre::OrganicHouse:
+        case Genre::AfroHouse:
+            switch (lane)
+            {
+                case LaneId::Percussion: return 2.0f;   // the lead voice
+                case LaneId::Shaker:     return 1.6f;
+                case LaneId::Tom:        return 1.1f;
+                case LaneId::OpenHat:    return 0.9f;
+                case LaneId::ClosedHat:  return 0.7f;   // steps back first
+                default:                 return 1.0f;
+            }
+
+        case Genre::IndieDance:
+            switch (lane)
+            {
+                case LaneId::ClosedHat:  return 1.4f;
+                case LaneId::OpenHat:    return 1.1f;
+                case LaneId::Percussion: return 1.1f;
+                default:                 return 1.0f;
+            }
+
+        case Genre::MelodicHouse:
+            switch (lane)
+            {
+                case LaneId::ClosedHat:  return 1.4f;
+                case LaneId::OpenHat:    return 1.3f;
+                case LaneId::Shaker:     return 1.1f;
+                case LaneId::Percussion: return 0.9f;
+                case LaneId::Tom:        return 0.8f;
+                default:                 return 1.0f;
+            }
+
+        case Genre::MelodicTechno:
+        case Genre::Techno:
+            switch (lane)
+            {
+                case LaneId::ClosedHat:  return 1.5f;   // the offbeat hat is the genre
+                case LaneId::OpenHat:    return 1.1f;
+                default:                 return 0.9f;
+            }
+
+        default:
+            return 1.0f;
+    }
+}
+
 /** Energy has to *distribute* hits, not stack them.
 
     Without this, every colour lane independently answers "how busy should I be?"
@@ -532,12 +590,14 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
         return t;
     };
 
-    // A single-lane reroll only trims itself - it must not quietly rewrite the
-    // lanes the user just decided to keep.
+    // A lane is never thinned below this, so a lead voice cannot be silenced
+    // into a fill-only lane by a busier neighbour.
+    const int floorHits = bars * 2;
+
     for (int guard = 0; totalHits() > budget && guard < 512; ++guard)
     {
-        int busiest = -1;
-        int busiestCount = 0;
+        int worst = -1;
+        float worstScore = 0.0f;
 
         for (auto l : colour)
         {
@@ -551,18 +611,24 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
 
             const int hits = kit.patterns[(size_t) idx].hitCount();
 
-            if (hits > busiestCount)
+            if (hits <= floorHits)
+                continue;
+
+            // Over-represented relative to how much this lane matters here.
+            const float score = (float) hits / laneImportance (s.genre, l);
+
+            if (score > worstScore)
             {
-                busiestCount = hits;
-                busiest = idx;
+                worstScore = score;
+                worst = idx;
             }
         }
 
         // Nothing left that we are allowed to thin.
-        if (busiest < 0 || busiestCount <= 2)
+        if (worst < 0)
             break;
 
-        auto& p = kit.patterns[(size_t) busiest];
+        auto& p = kit.patterns[(size_t) worst];
 
         int quietest = -1;
         float lowest = 2.0f;
@@ -585,7 +651,13 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
 //  entry points
 // ============================================================================
 
-void Generator::generateLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed)
+/** Build one lane, without touching the shared budget.
+
+    The budget is a property of the finished kit, so charging it per lane during
+    a full generate makes the lanes generated last pay for every lane before
+    them - and Percussion is last in the order, which is exactly how it ended up
+    thinned to a fill while the hi-hat kept twenty hits. */
+static void buildLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed)
 {
     const int idx = (int) lane;
 
@@ -605,7 +677,15 @@ void Generator::generateLane (Kit& kit, LaneId lane, const GenSettings& s, int l
     applyFill (kit, lane, s, rng);
     applyGroove (kit.patterns[(size_t) idx], lane, s, rng);
     applyGenreGuards (kit.patterns[(size_t) idx], lane, s);
-    applyEnergyBudget (kit, s, idx);
+}
+
+void Generator::generateLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed)
+{
+    buildLane (kit, lane, s, laneSeed);
+
+    // A single-lane reroll trims only itself - it must not quietly rewrite the
+    // lanes the user just decided to keep.
+    applyEnergyBudget (kit, s, (int) lane);
 }
 
 void Generator::generate (Kit& kit, const GenSettings& s)
@@ -631,7 +711,7 @@ void Generator::generate (Kit& kit, const GenSettings& s)
         if (! kit.lanes[(size_t) idx].enabled || kit.lanes[(size_t) idx].locked)
             continue;
 
-        generateLane (kit, lane, s, s.seed * 7919 + idx * 104729);
+        buildLane (kit, lane, s, s.seed * 7919 + idx * 104729);
     }
 
     applyEnergyBudget (kit, s);

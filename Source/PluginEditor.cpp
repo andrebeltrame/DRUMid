@@ -96,6 +96,8 @@ DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
     : AudioProcessorEditor (&p), proc (p),
       generateButton ("GENERATE", [] (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
                                   { Icons::drawDice (g, r, c); }),
+      surpriseButton ("SURPRISE", [] (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
+                                  { Icons::drawSparkle (g, r, c); }),
       grid (p), kitDrag (p, -1, "DRAG KIT MIDI")
 {
     setLookAndFeel (&lnf);
@@ -210,6 +212,13 @@ void DrummyAudioProcessorEditor::buildControls()
     generateButton.setColour (juce::TextButton::textColourOffId, Colours::background);
     addAndMakeVisible (generateButton);
 
+    // GENERATE rerolls the patterns you asked for; SURPRISE rerolls what you
+    // asked for as well - genre, energy, complexity, feel.
+    surpriseButton.onClick = [this] { proc.randomizeAll(); };
+    surpriseButton.setColour (juce::TextButton::buttonColourId, Colours::panelLight);
+    surpriseButton.setColour (juce::TextButton::textColourOffId, Colours::text);
+    addAndMakeVisible (surpriseButton);
+
     playButton.setClickingTogglesState (true);
     playButton.setColour (juce::TextButton::buttonColourId, Colours::panelLight);
     playButton.onClick = [this] { proc.setFreeRunEnabled (playButton.getToggleState()); };
@@ -300,7 +309,10 @@ void DrummyAudioProcessorEditor::resized()
     // ---- control strip
     auto controls = area.removeFromTop (78).reduced (10, 6);
 
-    generateButton.setBounds (controls.removeFromLeft (128).reduced (0, 8));
+    auto buttons = controls.removeFromLeft (134);
+    generateButton.setBounds (buttons.removeFromTop (38));
+    buttons.removeFromTop (5);
+    surpriseButton.setBounds (buttons.removeFromTop (23));
     controls.removeFromLeft (14);
 
     auto knobArea = controls.removeFromLeft (5 * 76);

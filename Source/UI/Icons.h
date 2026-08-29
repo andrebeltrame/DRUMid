@@ -18,6 +18,9 @@ namespace Icons
 
     /** Die face, for the GENERATE button. */
     void drawDice (juce::Graphics&, juce::Rectangle<float> area, juce::Colour);
+
+    /** Four-point sparkle, for SURPRISE. */
+    void drawSparkle (juce::Graphics&, juce::Rectangle<float> area, juce::Colour);
 }
 
 } // namespace drummy::ui

@@ -56,6 +56,11 @@ public:
 
     /** One-click generate: every enabled, unlocked lane gets a fresh pattern. */
     void generateAll (bool newSeed = true);
+
+    /** Surprise: rolls the genre and every generator setting, then regenerates.
+        Locked lanes and the bar count survive - lock is a promise, and pattern
+        length is a structural decision, not a flavour. */
+    void randomizeAll();
     void generateLane (drummy::LaneId lane);
 
     /** Copy the edited kit over to the audio thread. Call after any edit. */

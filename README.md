@@ -120,8 +120,15 @@ gets repetitive:
 Energy is a **shared budget across the kit**, not a per-lane setting. Without
 that, every colour lane independently answers "how busy should I be?" and at
 seven lanes the honest answer from each one adds up to mud. Kick and clap are
-the skeleton and are never touched; the rest compete for one budget, and the
-busiest lane gives up its quietest hit first.
+the skeleton and are never touched; the rest compete for one budget.
+
+Who gives ground is decided per genre, not by who happens to be busiest. The
+hi-hat is naturally the densest lane, so thinning the busiest starved the congas
+in afro house — exactly backwards, since there the percussion is the lead voice
+and the hat is what should step back. Each lane now carries a per-genre
+importance, and the lane that is most over-represented relative to it gives up
+its quietest hit first. In afro house that lands around 14 conga hits to 7 hat;
+in techno it inverts to 13 hat against 8 percussion.
 
 Everything is driven by the seed number, so the same seed rebuilds the same kit.
 That is what makes **lock + reroll** work: keep the kick you liked, hit GENERATE,
@@ -137,6 +144,13 @@ and only the unlocked lanes change.
   programmed.
 - **Techno** — straight, zero swing, closed hat on the offbeat, sparse
   syncopated metal placed between the kicks, 32nd ratchet rolls into the phrase.
+
+## The two buttons
+
+**GENERATE** rerolls the patterns under the settings you chose. **SURPRISE**
+rerolls the settings too — genre, energy, complexity and feel — and then
+generates. Locked lanes and the bar count survive both: a lock is a promise, and
+pattern length is a structural decision rather than a flavour.
 
 ## Editing the grid
 
@@ -193,9 +207,6 @@ Tools/
 ## Not there yet
 
 - More lanes: snare, ghost snare, rim, ride, crash, tambourine, FX
-- The energy budget has no notion of a genre's *lead voice* — in afro house the
-  hi-hat can currently out-compete the congas for the budget, when the congas
-  should win
 - The shaker and the percussion lane can still land on near-identical rhythms
 - Host-automatable parameters (state saves and recalls, but nothing is automatable yet)
 - Preset browser

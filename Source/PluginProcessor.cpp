@@ -96,6 +96,39 @@ void DrummyAudioProcessor::generateAll (bool newSeed)
     kitChanged.sendChangeMessage();
 }
 
+void DrummyAudioProcessor::randomizeAll()
+{
+    auto& r = juce::Random::getSystemRandom();
+
+    // Always land somewhere new - a surprise button that repeats itself is not
+    // a surprise.
+    if ((int) Genre::NumGenres > 1)
+    {
+        Genre next = gen.genre;
+
+        while (next == gen.genre)
+            next = (Genre) r.nextInt ((int) Genre::NumGenres);
+
+        gen.genre = next;
+    }
+
+    // Kept off the extremes on purpose: near zero the kit is empty and near one
+    // the budget just saturates, and neither is a result worth landing on.
+    gen.energy     = 0.25f + r.nextFloat() * 0.65f;
+    gen.complexity = 0.20f + r.nextFloat() * 0.60f;
+
+    // Swing wanders around the genre's own feel rather than across the whole
+    // range - a shuffled techno or a straight organic house is simply wrong.
+    gen.swing = juce::jlimit (0.5f, 0.68f,
+                              defaultSwingFor (gen.genre) + (r.nextFloat() - 0.5f) * 0.06f);
+
+    gen.humanTiming = 0.05f + r.nextFloat() * 0.35f;
+    gen.humanVel    = 0.10f + r.nextFloat() * 0.35f;
+    gen.fills       = r.nextFloat() < 0.8f;
+
+    generateAll (true);
+}
+
 void DrummyAudioProcessor::generateLane (LaneId lane)
 {
     const int idx = (int) lane;

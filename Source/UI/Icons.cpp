@@ -145,6 +145,40 @@ void Icons::drawLane (juce::Graphics& g, LaneId lane, juce::Rectangle<float> are
     }
 }
 
+void Icons::drawSparkle (juce::Graphics& g, juce::Rectangle<float> area, juce::Colour c)
+{
+    auto r = area.withSizeKeepingCentre (juce::jmin (area.getWidth(), area.getHeight()),
+                                         juce::jmin (area.getWidth(), area.getHeight()));
+
+    // A four-point star drawn as a pinched diamond - the concave waist is what
+    // makes it read as a sparkle and not as a rhombus.
+    auto star = [&] (juce::Point<float> centre, float radius)
+    {
+        const float waist = radius * 0.26f;
+
+        juce::Path p;
+        p.startNewSubPath (centre.x, centre.y - radius);
+        p.quadraticTo (centre.x, centre.y, centre.x + waist, centre.y - waist);
+        p.quadraticTo (centre.x, centre.y, centre.x + radius, centre.y);
+        p.quadraticTo (centre.x, centre.y, centre.x + waist, centre.y + waist);
+        p.quadraticTo (centre.x, centre.y, centre.x, centre.y + radius);
+        p.quadraticTo (centre.x, centre.y, centre.x - waist, centre.y + waist);
+        p.quadraticTo (centre.x, centre.y, centre.x - radius, centre.y);
+        p.quadraticTo (centre.x, centre.y, centre.x - waist, centre.y - waist);
+        p.closeSubPath();
+
+        g.fillPath (p);
+    };
+
+    g.setColour (c);
+    star (r.getCentre().translated (-r.getWidth() * 0.10f, r.getHeight() * 0.06f),
+          r.getWidth() * 0.42f);
+
+    g.setColour (c.withAlpha (0.75f));
+    star (r.getCentre().translated (r.getWidth() * 0.30f, -r.getHeight() * 0.28f),
+          r.getWidth() * 0.19f);
+}
+
 void Icons::drawDice (juce::Graphics& g, juce::Rectangle<float> area, juce::Colour c)
 {
     auto r = area.withSizeKeepingCentre (juce::jmin (area.getWidth(), area.getHeight()),
