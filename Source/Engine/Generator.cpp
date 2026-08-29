@@ -120,14 +120,6 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
                 if (! st.on)
                     continue;
 
-                // In techno the hat lives on the offbeat and nowhere else -
-                // a ghost on the downbeat just muddies the kick.
-                if (s.genre == Genre::Techno && (i % 4) == 0 && st.velocity < 0.7f)
-                {
-                    st.on = false;
-                    continue;
-                }
-
                 if (kick.steps[(size_t) i].on)
                     st.velocity *= 0.6f;
 
@@ -360,6 +352,25 @@ static void applyFill (Kit& kit, LaneId lane, const GenSettings& s, Rng& rng)
     }
 }
 
+/** Non-negotiable genre rules, applied last so that fills and bar variation
+    cannot quietly undo them. */
+static void applyGenreGuards (LanePattern& p, LaneId lane, const GenSettings& s)
+{
+    if (s.genre != Genre::Techno || lane != LaneId::ClosedHat)
+        return;
+
+    // The offbeat-only hat is the sound of techno. A continuous 16th pattern is
+    // the one legitimate exception - there the downbeat accent is the point - so
+    // the rule only bites on the sparse patterns it was written for.
+    const float density = (float) p.hitCount() / (float) (p.numSteps > 1 ? p.numSteps : 1);
+
+    if (density >= 0.55f)
+        return;
+
+    for (int i = 0; i < p.numSteps; i += 4)
+        p.steps[(size_t) i].clear();
+}
+
 // ============================================================================
 //  entry points
 // ============================================================================
@@ -383,6 +394,7 @@ void Generator::generateLane (Kit& kit, LaneId lane, const GenSettings& s, int l
     applyBarVariation (kit.patterns[(size_t) idx], lane, s, rng);
     applyFill (kit, lane, s, rng);
     applyGroove (kit.patterns[(size_t) idx], lane, s, rng);
+    applyGenreGuards (kit.patterns[(size_t) idx], lane, s);
 }
 
 void Generator::generate (Kit& kit, const GenSettings& s)

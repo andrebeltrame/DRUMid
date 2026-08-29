@@ -73,3 +73,36 @@ PUBLIC
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
 )
+
+# ---------------------------------------------------------------------------
+#  Console checks for the engine and the exported MIDI.
+#    cmake -B build -DDRUMMY_BUILD_TESTS=ON
+#    cmake --build build --target DrummyTests && ./build/DrummyTests
+# ---------------------------------------------------------------------------
+option(DRUMMY_BUILD_TESTS "Build the engine console tests" OFF)
+
+if (DRUMMY_BUILD_TESTS)
+    juce_add_console_app(DrummyTests PRODUCT_NAME "DrummyTests")
+
+    target_sources(DrummyTests PRIVATE
+        Tests/EngineTests.cpp
+        Source/Engine/PatternLibrary.cpp
+        Source/Engine/Generator.cpp
+        Source/Engine/NoteMap.cpp
+        Source/Engine/MidiExport.cpp
+    )
+
+    target_include_directories(DrummyTests PRIVATE Source)
+
+    target_compile_definitions(DrummyTests PRIVATE
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_STANDALONE_APPLICATION=1
+    )
+
+    target_link_libraries(DrummyTests PRIVATE
+        juce::juce_audio_basics
+        juce::juce_core
+        juce::juce_recommended_config_flags
+    )
+endif()

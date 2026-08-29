@@ -36,6 +36,20 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j8
 JUCE 8.0.9 is pulled in automatically by CMake. The VST3 is copied to
 `~/Library/Audio/Plug-Ins/VST3/` on every build.
 
+## Tests
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMMY_BUILD_TESTS=ON
+cmake --build build --target DrummyTests -j8
+./build/DrummyTests_artefacts/Release/DrummyTests
+```
+
+Prints the generated grids for all three genres and asserts the things that are
+hard to hear a bug in: the kick lands on the quarters, techno's hat stays off
+the downbeat, bar 2 isn't a copy of bar 1, swing is real micro-timing, a locked
+lane survives GENERATE, a seed is reproducible, and the exported .mid contains
+every hit on the right pad at exactly the right clip length.
+
 ## Using it in Ableton
 
 **To commit a pattern to a clip (the main workflow):** drag `DRAG KIT MIDI`
