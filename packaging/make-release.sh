@@ -22,6 +22,15 @@ fi
 
 echo "DRUMid $VERSION"
 
+# A CMake cache remembers the absolute path it was generated in, so it breaks
+# the moment the project folder is renamed or moved. Drop it and reconfigure
+# rather than making the person read the error.
+if [[ -f build-release/CMakeCache.txt ]] \
+   && ! grep -qx "CMAKE_HOME_DIRECTORY:INTERNAL=$ROOT" build-release/CMakeCache.txt; then
+    echo "stale build cache from another path - reconfiguring"
+    rm -rf build-release
+fi
+
 # Never copy a release build into the system plugin folder behind the user's
 # back - the release is the thing in dist/, not something silently installed.
 cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DDRUMID_COPY_AFTER_BUILD=OFF >/dev/null
