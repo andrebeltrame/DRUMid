@@ -179,7 +179,7 @@ own dynamic character — and then generates. Locked lanes and the bar count
 survive both: a lock is a promise, and pattern length is a structural decision
 rather than a flavour.
 
-To redo one drum on its own, hit that lane's **R**.
+To redo one drum on its own, hit that lane's reload arrow.
 
 There is no transport button. DRUMid follows the host and nothing else: it is a
 MIDI writer, not a player with its own clock.
@@ -193,8 +193,8 @@ MIDI writer, not a player with its own clock.
 | double click | cycle ratchet (1 → 2 → 3) |
 | lane name | enable / disable the lane |
 | drag the lane icon | export that lane alone as MIDI |
-| `L` | lock — GENERATE will not touch this lane |
-| `R` | redo just that drum |
+| padlock | lock — GENERATE will not touch this lane. It is drawn open or closed, so the state reads without relying on colour |
+| reload arrow | redo just that drum |
 | drag `DYN` | how far this element's velocity moves |
 | drag the note | retune the lane (switches the map to Custom) |
 

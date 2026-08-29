@@ -204,6 +204,95 @@ void Icons::drawSparkle (juce::Graphics& g, juce::Rectangle<float> area, juce::C
           r.getWidth() * 0.19f);
 }
 
+void Icons::drawLock (juce::Graphics& g, juce::Rectangle<float> area, juce::Colour c, bool locked)
+{
+    auto r = area.withSizeKeepingCentre (juce::jmin (area.getWidth(), area.getHeight()),
+                                         juce::jmin (area.getWidth(), area.getHeight()));
+
+    const float line = juce::jmax (1.0f, r.getWidth() * 0.12f);
+    const float shackleR = r.getWidth() * 0.23f;
+
+    // The body is the bottom half; the shackle arcs above it. Drawing the body
+    // first and the shackle after keeps the silhouette readable at 18 pixels.
+    auto body = juce::Rectangle<float> (r.getCentreX() - r.getWidth() * 0.34f,
+                                        r.getY() + r.getHeight() * 0.5f,
+                                        r.getWidth() * 0.68f,
+                                        r.getHeight() * 0.42f);
+
+    g.setColour (c);
+    g.fillRoundedRectangle (body, r.getWidth() * 0.09f);
+
+    juce::Path shackle;
+
+    const auto halfPi = juce::MathConstants<float>::halfPi;
+
+    if (locked)
+    {
+        // Closed: an upper half-circle centred over the body, both legs down.
+        const float cx = body.getCentreX();
+        const float cy = body.getY() - shackleR * 0.05f;
+
+        shackle.startNewSubPath (cx - shackleR, body.getY());
+        shackle.lineTo (cx - shackleR, cy);
+        shackle.addCentredArc (cx, cy, shackleR, shackleR, 0.0f, -halfPi, halfPi, false);
+        shackle.lineTo (cx + shackleR, body.getY());
+    }
+    else
+    {
+        // Open: the shackle is lifted and swung right, and its left leg hangs
+        // clear of the body. That gap is what says "unlocked" without colour.
+        const float cx = body.getCentreX() + shackleR * 0.7f;
+        const float cy = body.getY() - shackleR * 0.5f;
+
+        shackle.startNewSubPath (cx - shackleR, cy + shackleR * 0.55f);
+        shackle.lineTo (cx - shackleR, cy);
+        shackle.addCentredArc (cx, cy, shackleR, shackleR, 0.0f, -halfPi, halfPi, false);
+        shackle.lineTo (cx + shackleR, body.getY());
+    }
+
+    g.strokePath (shackle, juce::PathStrokeType (line, juce::PathStrokeType::curved,
+                                                 juce::PathStrokeType::rounded));
+}
+
+void Icons::drawReload (juce::Graphics& g, juce::Rectangle<float> area, juce::Colour c)
+{
+    auto r = area.withSizeKeepingCentre (juce::jmin (area.getWidth(), area.getHeight()),
+                                         juce::jmin (area.getWidth(), area.getHeight()));
+
+    const float line = juce::jmax (1.0f, r.getWidth() * 0.14f);
+    const float radius = r.getWidth() * 0.32f;
+    const auto centre = r.getCentre();
+
+    // An almost-closed circle: the gap is what makes it read as a cycle rather
+    // than as a ring, and the arrowhead says which way it turns.
+    const float start = juce::MathConstants<float>::pi * 0.35f;
+    const float end   = start + juce::MathConstants<float>::twoPi * 0.76f;
+
+    juce::Path arc;
+    arc.addCentredArc (centre.x, centre.y, radius, radius, 0.0f, start, end, true);
+
+    g.setColour (c);
+    g.strokePath (arc, juce::PathStrokeType (line, juce::PathStrokeType::curved,
+                                             juce::PathStrokeType::butt));
+
+    // Built from the tangent at the arc's end rather than by rotating a shape:
+    // JUCE measures these angles clockwise from twelve o'clock, and hand-rolling
+    // the vectors is the version that cannot be off by ninety degrees.
+    const juce::Point<float> tip (centre.x + radius * std::sin (end),
+                                  centre.y - radius * std::cos (end));
+
+    const juce::Point<float> tangent (std::cos (end), std::sin (end));
+    const juce::Point<float> normal (-tangent.y, tangent.x);
+
+    const float head = r.getWidth() * 0.3f;
+
+    juce::Path arrow;
+    arrow.addTriangle (tip.x + tangent.x * head * 0.9f,  tip.y + tangent.y * head * 0.9f,
+                       tip.x + normal.x * head * 0.52f,  tip.y + normal.y * head * 0.52f,
+                       tip.x - normal.x * head * 0.52f,  tip.y - normal.y * head * 0.52f);
+    g.fillPath (arrow);
+}
+
 void Icons::drawDice (juce::Graphics& g, juce::Rectangle<float> area, juce::Colour c)
 {
     auto r = area.withSizeKeepingCentre (juce::jmin (area.getWidth(), area.getHeight()),

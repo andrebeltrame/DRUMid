@@ -189,9 +189,10 @@ void DrumidAudioProcessorEditor::buildControls()
     brandButton.setTooltip ("About DRUMid");
     addAndMakeVisible (brandButton);
 
-    hintLabel.setText ("R redoes just that drum  -  L locks it  -  drag DYN for how much its velocity moves  -  "
-                       "click the name to disable  -  drag the icon to export the lane  -  "
-                       "alt+drag a step for velocity  -  double click for ratchet",
+    hintLabel.setText ("the reload arrow redoes just that drum  -  the padlock keeps GENERATE away from it  -  "
+                       "drag DYN for how much its velocity moves  -  click the name to disable  -  "
+                       "drag the icon to export the lane  -  alt+drag a step for velocity  -  "
+                       "double click for ratchet",
                        juce::dontSendNotification);
     hintLabel.setFont (juce::FontOptions (10.5f));
     hintLabel.setColour (juce::Label::textColourId, Colours::textDim);

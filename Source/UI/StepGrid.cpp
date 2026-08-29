@@ -3,6 +3,8 @@
 #include "Icons.h"
 #include "../Engine/MidiExport.h"
 
+#include <functional>
+
 namespace drumid::ui
 {
 
@@ -145,18 +147,25 @@ void StepGrid::drawHeader (juce::Graphics& g, int lane, juce::Rectangle<int> row
     g.setFont (juce::FontOptions (10.0f));
     g.drawText (juce::String (dynPercent) + "%", dynBox, juce::Justification::centred, false);
 
-    auto badge = [&] (int x, const juce::String& text, bool on, juce::Colour onColour)
+    // A padlock and a reload arrow rather than the letters L and R: a letter is
+    // an arbitrary convention you have to be taught, and these two are not.
+    auto badge = [&] (int x, bool on, juce::Colour onColour,
+                      const std::function<void (juce::Rectangle<float>, juce::Colour)>& paint)
     {
-        auto b = juce::Rectangle<int> (x, row.getY() + row.getHeight() / 2 - 8, kBtnW, 16);
+        auto b = juce::Rectangle<int> (x, row.getY() + row.getHeight() / 2 - 9, kBtnW, 18);
+
         g.setColour (on ? onColour : Colours::panelLight);
         g.fillRoundedRectangle (b.toFloat(), 3.0f);
-        g.setColour (on ? Colours::background : Colours::textDim);
-        g.setFont (juce::FontOptions (10.0f, juce::Font::bold));
-        g.drawText (text, b, juce::Justification::centred, false);
+
+        paint (b.toFloat().reduced (2.5f),
+               on ? Colours::background : (dim ? Colours::outline.brighter (0.4f) : Colours::textDim));
     };
 
-    badge (kLockX,  "L", ls.locked, Colours::locked);
-    badge (kReroll, "R", false,     Colours::accent);
+    badge (kLockX, ls.locked, Colours::locked,
+           [&] (juce::Rectangle<float> b, juce::Colour c) { Icons::drawLock (g, b, c, ls.locked); });
+
+    badge (kReroll, false, Colours::accent,
+           [&] (juce::Rectangle<float> b, juce::Colour c) { Icons::drawReload (g, b, c); });
 }
 
 void StepGrid::drawCell (juce::Graphics& g, int lane, int step)

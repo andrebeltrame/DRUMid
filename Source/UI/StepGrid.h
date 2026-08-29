@@ -3,6 +3,8 @@
 #include "../PluginProcessor.h"
 #include "DrumidLookAndFeel.h"
 
+#include <functional>
+
 namespace drumid::ui
 {
 
@@ -16,7 +18,8 @@ namespace drumid::ui
       drag the icon     export that lane alone as MIDI
       drag the note     retune the lane, which switches the map to Custom
       drag DYN          how far this element's velocity moves, per lane
-      R                 redo just this drum
+      padlock           keep GENERATE away from this lane
+      reload arrow      redo just this drum
 
     There is no mute. Every lane here drives its own instrument, so disabling a
     lane is the only switch that means anything - a muted-but-still-generated

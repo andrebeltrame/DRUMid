@@ -21,6 +21,13 @@ namespace Icons
 
     /** Four-point sparkle, for SURPRISE. */
     void drawSparkle (juce::Graphics&, juce::Rectangle<float> area, juce::Colour);
+
+    /** Padlock. The shackle is drawn open when the lane is unlocked, so the
+        state reads without relying on colour alone. */
+    void drawLock (juce::Graphics&, juce::Rectangle<float> area, juce::Colour, bool locked);
+
+    /** Circular arrow, for redoing one lane. */
+    void drawReload (juce::Graphics&, juce::Rectangle<float> area, juce::Colour);
 }
 
 } // namespace drumid::ui

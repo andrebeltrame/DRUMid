@@ -10,7 +10,8 @@
 using namespace drumid;
 
 static bool renderOne (Genre genre, float energy, float complexity, int bars,
-                       const juce::File& outFile, bool withAbout = false)
+                       const juce::File& outFile, bool withAbout = false,
+                       bool lockDemo = false)
 {
     DrumidAudioProcessor proc;
 
@@ -22,6 +23,16 @@ static bool renderOne (Genre genre, float energy, float complexity, int bars,
                                : (genre == Genre::OrganicHouse) ? 0.56f
                                                                 : 0.53f;
     proc.generateAll (true);
+
+    if (lockDemo)
+    {
+        // Locked lanes and a disabled one, so the shot shows every state a lane
+        // header can be in - closed padlock, open padlock, dimmed.
+        proc.kit().lanes[(size_t) LaneId::Kick].locked = true;
+        proc.kit().lanes[(size_t) LaneId::Clap].locked = true;
+        proc.kit().lanes[(size_t) LaneId::OpenHat].enabled = false;
+        proc.publishKit();
+    }
 
     std::unique_ptr<juce::AudioProcessorEditor> editor (proc.createEditor());
 
@@ -78,6 +89,13 @@ int main (int argc, char** argv)
         { Genre::MelodicTechno, 0.50f, 0.45f, 2, "drumid-melodic-techno" },
         { Genre::Techno,        0.60f, 0.50f, 2, "drumid-techno"         },
     };
+
+    // Lane header states, for checking the padlock and for the manual.
+    {
+        auto file = outDir.getChildFile ("drumid-lane-states.png");
+        const bool ok = renderOne (Genre::AfroHouse, 0.6f, 0.5f, 2, file, false, true);
+        std::printf ("%s  %s\n", ok ? "ok  " : "FAIL", file.getFullPathName().toRawUTF8());
+    }
 
     // The about card, over a kit, so the release screenshot shows the version.
     {
