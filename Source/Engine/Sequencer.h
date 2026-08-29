@@ -8,7 +8,7 @@
 #include <random>
 #include <vector>
 
-namespace drummy
+namespace drumid
 {
 
 /** Transport-locked step player.
@@ -64,4 +64,4 @@ private:
     std::uniform_real_distribution<float> dist { 0.0f, 1.0f };
 };
 
-} // namespace drummy
+} // namespace drumid

@@ -2,14 +2,14 @@
 #include "Engine/MidiExport.h"
 #include "UI/Icons.h"
 
-using namespace drummy;
-using namespace drummy::ui;
+using namespace drumid;
+using namespace drumid::ui;
 
 // ============================================================================
 //  MidiDragTile
 // ============================================================================
 
-MidiDragTile::MidiDragTile (DrummyAudioProcessor& p, int laneFilter, juce::String labelText)
+MidiDragTile::MidiDragTile (DrumidAudioProcessor& p, int laneFilter, juce::String labelText)
     : proc (p), lane (laneFilter), text (std::move (labelText))
 {
     setMouseCursor (juce::MouseCursor::DraggingHandCursor);
@@ -36,7 +36,7 @@ void MidiDragTile::mouseDrag (const juce::MouseEvent&)
 {
     const auto& kit = proc.kit();
 
-    juce::String name = "Drummy_";
+    juce::String name = "DRUMid_";
     name << genreName (proc.settings().genre) << "_" << kit.bars() << "bar_"
          << (lane < 0 ? juce::String ("kit") : juce::String (laneName ((LaneId) lane)))
          << "_" << proc.settings().seed;
@@ -53,6 +53,34 @@ void MidiDragTile::mouseDrag (const juce::MouseEvent&)
 
     juce::DragAndDropContainer::performExternalDragDropOfFiles (
         juce::StringArray (file.getFullPathName()), false, this, nullptr);
+}
+
+// ============================================================================
+//  BrandButton
+// ============================================================================
+
+void BrandButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
+{
+    auto b = getLocalBounds().toFloat();
+
+    g.setColour (Colours::accent.withMultipliedBrightness (down ? 0.85f : (highlighted ? 1.15f : 1.0f)));
+    g.setFont (juce::FontOptions (21.0f, juce::Font::bold));
+
+    const float markWidth = juce::GlyphArrangement::getStringWidth (
+                                juce::Font (juce::FontOptions (21.0f, juce::Font::bold)), "DRUMid");
+
+    g.drawText ("DRUMid", b.removeFromLeft (markWidth + 2.0f), juce::Justification::centredLeft, false);
+
+    b.removeFromLeft (7.0f);
+
+    auto pill = b.removeFromLeft (44.0f).withSizeKeepingCentre (44.0f, 15.0f);
+
+    g.setColour (highlighted ? Colours::panelLight.brighter (0.2f) : Colours::panelLight);
+    g.fillRoundedRectangle (pill, 3.0f);
+
+    g.setColour (Colours::textDim);
+    g.setFont (juce::FontOptions (10.0f, juce::Font::bold));
+    g.drawText (DRUMID_VERSION, pill, juce::Justification::centred, false);
 }
 
 // ============================================================================
@@ -92,7 +120,7 @@ void IconButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 //  Editor
 // ============================================================================
 
-DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
+DrumidAudioProcessorEditor::DrumidAudioProcessorEditor (DrumidAudioProcessor& p)
     : AudioProcessorEditor (&p), proc (p),
       generateButton ("GENERATE", [] (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
                                   { Icons::drawDice (g, r, c); }),
@@ -106,6 +134,9 @@ DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
 
     addAndMakeVisible (grid);
     addAndMakeVisible (kitDrag);
+
+    aboutPanel.setVisible (false);
+    addChildComponent (aboutPanel);
 
     grid.onEdit = [this]
     {
@@ -128,13 +159,13 @@ DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
     startTimerHz (30);
 }
 
-DrummyAudioProcessorEditor::~DrummyAudioProcessorEditor()
+DrumidAudioProcessorEditor::~DrumidAudioProcessorEditor()
 {
     proc.kitChanged.removeChangeListener (this);
     setLookAndFeel (nullptr);
 }
 
-juce::Slider& DrummyAudioProcessorEditor::addKnob (juce::Slider& s, juce::Label& l,
+juce::Slider& DrumidAudioProcessorEditor::addKnob (juce::Slider& s, juce::Label& l,
                                                    const juce::String& name,
                                                    double min, double max, double interval)
 {
@@ -152,12 +183,11 @@ juce::Slider& DrummyAudioProcessorEditor::addKnob (juce::Slider& s, juce::Label&
     return s;
 }
 
-void DrummyAudioProcessorEditor::buildControls()
+void DrumidAudioProcessorEditor::buildControls()
 {
-    titleLabel.setText ("DRUMMY", juce::dontSendNotification);
-    titleLabel.setFont (juce::FontOptions (21.0f, juce::Font::bold));
-    titleLabel.setColour (juce::Label::textColourId, Colours::accent);
-    addAndMakeVisible (titleLabel);
+    brandButton.onClick = [this] { showAbout (true); };
+    brandButton.setTooltip ("About DRUMid");
+    addAndMakeVisible (brandButton);
 
     hintLabel.setText ("click a lane name to disable  -  drag its icon to export that lane  -  "
                        "L lock  -  R reroll  -  alt+drag a step for velocity  -  double click for ratchet",
@@ -244,7 +274,7 @@ void DrummyAudioProcessorEditor::buildControls()
     humanVel.onValueChange    = [this] { proc.settings().humanVel    = (float) humanVel.getValue();    proc.generateAll (false); };
 }
 
-void DrummyAudioProcessorEditor::refreshFromProcessor()
+void DrumidAudioProcessorEditor::refreshFromProcessor()
 {
     const auto& s = proc.settings();
 
@@ -264,12 +294,21 @@ void DrummyAudioProcessorEditor::refreshFromProcessor()
     grid.repaint();
 }
 
-void DrummyAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
+void DrumidAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
 {
     refreshFromProcessor();
 }
 
-void DrummyAudioProcessorEditor::timerCallback()
+void DrumidAudioProcessorEditor::showAbout (bool shouldBeVisible)
+{
+    aboutPanel.setBounds (getLocalBounds());
+    aboutPanel.setVisible (shouldBeVisible);
+
+    if (shouldBeVisible)
+        aboutPanel.toFront (false);
+}
+
+void DrumidAudioProcessorEditor::timerCallback()
 {
     grid.setPlayStep (proc.currentStep());
 
@@ -277,7 +316,7 @@ void DrummyAudioProcessorEditor::timerCallback()
     playButton.setEnabled (! proc.isHostPlaying());
 }
 
-void DrummyAudioProcessorEditor::paint (juce::Graphics& g)
+void DrumidAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (Colours::background);
 
@@ -290,13 +329,15 @@ void DrummyAudioProcessorEditor::paint (juce::Graphics& g)
     g.drawHorizontalLine (122, 0.0f, (float) getWidth());
 }
 
-void DrummyAudioProcessorEditor::resized()
+void DrumidAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
     // ---- top bar
+    aboutPanel.setBounds (getLocalBounds());
+
     auto top = area.removeFromTop (44).reduced (10, 7);
-    titleLabel.setBounds (top.removeFromLeft (92));
+    brandButton.setBounds (top.removeFromLeft (152));
     genreBox.setBounds (top.removeFromLeft (150).reduced (0, 1));
     top.removeFromLeft (8);
     barsBox.setBounds (top.removeFromLeft (80).reduced (0, 1));

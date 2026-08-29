@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-namespace drummy
+namespace drumid
 {
 
 /** The three-layer pattern brain.
@@ -31,4 +31,4 @@ namespace Generator
     std::vector<int> euclid (int k, int n, int rotation = 0);
 }
 
-} // namespace drummy
+} // namespace drumid

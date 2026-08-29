@@ -1,6 +1,6 @@
 #include "Icons.h"
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
 static void drawKick (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
@@ -200,4 +200,4 @@ void Icons::drawDice (juce::Graphics& g, juce::Rectangle<float> area, juce::Colo
         g.fillEllipse (r.getCentreX() + p.x - d * 0.5f, r.getCentreY() + p.y - d * 0.5f, d, d);
 }
 
-} // namespace drummy::ui
+} // namespace drumid::ui

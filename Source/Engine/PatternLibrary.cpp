@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-namespace drummy
+namespace drumid
 {
 
 // ============================================================================
@@ -275,4 +275,4 @@ LanePattern PatternLibrary::fromGrid (const char* grid, int numSteps)
     return p;
 }
 
-} // namespace drummy
+} // namespace drumid

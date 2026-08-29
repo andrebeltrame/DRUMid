@@ -5,7 +5,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_core/juce_core.h>
 
-namespace drummy
+namespace drumid
 {
 
 /** Turns a kit into a .mid file you can drag straight into an Ableton clip slot.
@@ -38,4 +38,4 @@ namespace MidiExport
     juce::File writeKitTempFile (const Kit& kit, const juce::String& baseName);
 }
 
-} // namespace drummy
+} // namespace drumid

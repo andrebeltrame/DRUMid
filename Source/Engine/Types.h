@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 
-namespace drummy
+namespace drumid
 {
 
 static constexpr int kStepsPerBar = 16;   // 16th-note grid
@@ -160,4 +160,4 @@ struct GenSettings
     bool  fills       = true;   // vary/fill on the last bar of the phrase
 };
 
-} // namespace drummy
+} // namespace drumid

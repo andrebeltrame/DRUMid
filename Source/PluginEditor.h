@@ -2,7 +2,8 @@
 
 #include "PluginProcessor.h"
 #include "UI/StepGrid.h"
-#include "UI/DrummyLookAndFeel.h"
+#include "UI/DrumidLookAndFeel.h"
+#include "UI/AboutPanel.h"
 
 /** A drag source that hands the host a .mid file.
 
@@ -14,7 +15,7 @@
 class MidiDragTile : public juce::Component
 {
 public:
-    MidiDragTile (DrummyAudioProcessor& p, int laneFilter, juce::String labelText);
+    MidiDragTile (DrumidAudioProcessor& p, int laneFilter, juce::String labelText);
 
     void paint (juce::Graphics&) override;
     void mouseDrag (const juce::MouseEvent&) override;
@@ -22,10 +23,19 @@ public:
     void mouseExit (const juce::MouseEvent&) override;
 
 private:
-    DrummyAudioProcessor& proc;
+    DrumidAudioProcessor& proc;
     int lane;
     juce::String text;
     bool hover = false;
+};
+
+/** The wordmark, with the version beside it. Clicking it opens the about card,
+    which is where the version lives so it never has to compete for header room. */
+class BrandButton : public juce::Button
+{
+public:
+    BrandButton() : juce::Button ("about") {}
+    void paintButton (juce::Graphics&, bool highlighted, bool down) override;
 };
 
 /** A TextButton that carries a glyph next to its label. */
@@ -43,16 +53,19 @@ private:
     Painter painter;
 };
 
-class DrummyAudioProcessorEditor : public juce::AudioProcessorEditor,
+class DrumidAudioProcessorEditor : public juce::AudioProcessorEditor,
                                    private juce::Timer,
                                    private juce::ChangeListener
 {
 public:
-    explicit DrummyAudioProcessorEditor (DrummyAudioProcessor&);
-    ~DrummyAudioProcessorEditor() override;
+    explicit DrumidAudioProcessorEditor (DrumidAudioProcessor&);
+    ~DrumidAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    /** Public so the offscreen preview renderer can capture the about card. */
+    void showAbout (bool shouldBeVisible);
 
 private:
     void timerCallback() override;
@@ -63,10 +76,11 @@ private:
     juce::Slider& addKnob (juce::Slider& s, juce::Label& l, const juce::String& name,
                            double min, double max, double interval);
 
-    DrummyAudioProcessor& proc;
-    drummy::ui::DrummyLookAndFeel lnf;
+    DrumidAudioProcessor& proc;
+    drumid::ui::DrumidLookAndFeel lnf;
 
-    juce::Label       titleLabel, seedLabel, hintLabel;
+    BrandButton       brandButton;
+    juce::Label       seedLabel, hintLabel;
     juce::ComboBox    genreBox, barsBox, noteMapBox;
     IconButton        generateButton;
     IconButton        surpriseButton;
@@ -76,8 +90,9 @@ private:
     juce::Slider energy, complexity, swing, humanTiming, humanVel;
     juce::Label  energyLbl, complexityLbl, swingLbl, humanTimingLbl, humanVelLbl;
 
-    drummy::ui::StepGrid grid;
+    drumid::ui::StepGrid grid;
     MidiDragTile kitDrag;
+    drumid::ui::AboutPanel aboutPanel;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrummyAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumidAudioProcessorEditor)
 };

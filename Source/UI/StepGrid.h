@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../PluginProcessor.h"
-#include "DrummyLookAndFeel.h"
+#include "DrumidLookAndFeel.h"
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
 /** Lane header + step grid.
@@ -23,7 +23,7 @@ namespace drummy::ui
 class StepGrid : public juce::Component
 {
 public:
-    explicit StepGrid (DrummyAudioProcessor& p);
+    explicit StepGrid (DrumidAudioProcessor& p);
 
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;
@@ -53,7 +53,7 @@ private:
     void drawHeader (juce::Graphics&, int lane, juce::Rectangle<int> row);
     void drawCell (juce::Graphics&, int lane, int step);
 
-    DrummyAudioProcessor& proc;
+    DrumidAudioProcessor& proc;
 
     int playStep = -1;
     Hit dragOrigin;
@@ -64,4 +64,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StepGrid)
 };
 
-} // namespace drummy::ui
+} // namespace drumid::ui

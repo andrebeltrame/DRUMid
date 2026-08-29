@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace drummy
+namespace drumid
 {
 
 // ============================================================================
@@ -717,4 +717,4 @@ void Generator::generate (Kit& kit, const GenSettings& s)
     applyEnergyBudget (kit, s);
 }
 
-} // namespace drummy
+} // namespace drumid

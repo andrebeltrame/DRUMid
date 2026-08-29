@@ -1,0 +1,91 @@
+NOWHR DYNAMICS
+DRUMid @VERSION@ — macOS (VST3, universal arm64 + x86_64)
+=============================================================
+
+Gerador de padrões de bateria em MIDI para melodic house, organic house,
+afro house, indie dance, melodic techno e techno.
+
+O DRUMid não produz som nenhum. Ele gera os padrões e te entrega o MIDI —
+quem toca são os seus racks e samplers.
+
+Escolha as lanes, aperte GENERATE, arraste o MIDI para onde quiser.
+
+
+INSTALAÇÃO
+----------
+
+1. Copie o DRUMid.vst3 para:
+
+       ~/Library/Audio/Plug-Ins/VST3/
+
+   (No Finder: Ir > Ir para a pasta, e cole o caminho acima.)
+
+2. IMPORTANTE — o macOS coloca em quarentena tudo que chega dentro de um
+   .zip baixado. Abra o Terminal e rode:
+
+       xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/DRUMid.vst3
+
+3. No Ableton Live: Preferências > Plug-Ins > Rescan.
+
+
+USANDO NO ABLETON
+-----------------
+
+Um instrumento por canal (o padrão):
+
+   Todas as lanes ficam em C3, e arrastar o DRAG KIT MIDI para a Session
+   View escreve um track MIDI por lane — o Live cria um canal por
+   instrumento, já nomeado Kick, Clap, Tom e assim por diante. Para
+   exportar uma lane só, arraste o ícone dela.
+
+Tocando um Drum Rack:
+
+   Troque o mapa de notas para "GM / Drum Rack". Aí cada lane ganha a sua
+   própria nota e o drag do kit escreve um track só, que cai como um clip
+   único tocando o rack inteiro.
+
+Para ouvir ao vivo em vez de exportar:
+
+   O DRUMid é um instrumento que emite MIDI, então ele vai num canal MIDI
+   próprio. No canal do seu rack, ponha MIDI From no canal do DRUMid,
+   escolha DRUMid no submenu, e deixe o Monitor em In.
+
+
+OS CONTROLES
+------------
+
+   GENERATE    sorteia os padrões com as configurações atuais
+   SURPRISE    sorteia também as configurações — gênero, energia, feel
+
+   ENERGY      o quão cheio é o kit, como um orçamento único entre lanes
+   COMPLEX     síncope, notas fantasma, ratchets
+   SWING       50% é reto; cada gênero começa no feel natural dele
+   TIMING      humanização do tempo
+   DYNAMICS    humanização da velocity
+
+   Lanes travadas e a quantidade de compassos sobrevivem aos dois botões.
+
+
+A GRADE
+-------
+
+   clique / arraste     pinta os steps
+   alt + arraste        velocity
+   clique duplo         alterna o ratchet
+   nome da lane         liga / desliga a lane
+   arraste o ícone      exporta só aquela lane em MIDI
+   L                    trava — o GENERATE não mexe nesta lane
+   R                    sorteia só esta lane
+   arraste a nota       muda a nota da lane
+
+Não há mute nem solo: cada lane toca o seu próprio instrumento, então
+ligar/desligar é o único interruptor que faz sentido aqui.
+
+
+REQUISITOS
+----------
+
+macOS 10.15 ou superior, Apple Silicon ou Intel. Qualquer host VST3.
+
+
+Feito com JUCE.

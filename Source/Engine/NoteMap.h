@@ -3,7 +3,7 @@
 #include "Types.h"
 #include <string>
 
-namespace drummy
+namespace drumid
 {
 
 /** Where each lane lands on the keyboard.
@@ -44,4 +44,4 @@ namespace NoteMap
     std::string noteName (int midiNote);
 }
 
-} // namespace drummy
+} // namespace drumid

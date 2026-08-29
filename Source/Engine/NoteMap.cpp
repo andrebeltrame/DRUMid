@@ -1,6 +1,6 @@
 #include "NoteMap.h"
 
-namespace drummy
+namespace drumid
 {
 
 const char* NoteMap::presetName (NoteMapPreset p)
@@ -66,4 +66,4 @@ std::string NoteMap::noteName (int midiNote)
     return std::string (names[midiNote % 12]) + std::to_string (octave);
 }
 
-} // namespace drummy
+} // namespace drumid

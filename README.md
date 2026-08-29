@@ -1,10 +1,10 @@
-# Drummy
+# DRUMid
 
 MIDI drum pattern generator for **melodic house**, **organic house** and **techno**,
 built for Ableton Live and Drum Racks.
 
 Pick your lanes, hit GENERATE, drag the MIDI into a clip. No sound of its own —
-Drummy drives your rack.
+DRUMid drives your rack.
 
 ---
 
@@ -20,13 +20,13 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 | Seed bank | 137 curated patterns |
 | Pattern length | 1, 2 or 4 bars |
 
-![Afro House](docs/drummy-afro-house.png)
+![Afro House](docs/drumid-afro-house.png)
 
 AU is wired up in `CMakeLists.txt` but off by default because it needs a full
 Xcode install (Command Line Tools alone won't build it). With Xcode present:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMMY_BUILD_AU=ON
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMID_BUILD_AU=ON
 ```
 
 ## Build
@@ -41,9 +41,9 @@ JUCE 8.0.9 is pulled in automatically by CMake. The VST3 is copied to
 ## Tests
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMMY_BUILD_TESTS=ON
-cmake --build build --target DrummyTests -j8
-./build/DrummyTests_artefacts/Release/DrummyTests
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMID_BUILD_TESTS=ON
+cmake --build build --target DrumidTests -j8
+./build/DrumidTests_artefacts/Release/DrumidTests
 ```
 
 Prints the generated grids for all three genres and asserts the things that are
@@ -66,9 +66,9 @@ that plays the whole rack.
 Either way, swing and humanize are baked into the exported timing — what you
 drag is what you heard.
 
-**To audition live:** Drummy is an instrument that outputs MIDI, so it goes on
-its own MIDI track. On the Drum Rack track set `MIDI From` → the Drummy track →
-`Drummy`, and `Monitor: In`.
+**To audition live:** DRUMid is an instrument that outputs MIDI, so it goes on
+its own MIDI track. On the Drum Rack track set `MIDI From` → the DRUMid track →
+`DRUMid`, and `Monitor: In`.
 
 ## Note mapping
 
@@ -178,9 +178,9 @@ are visible and not just audible.
 renderer, not a screen capture:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMMY_BUILD_PREVIEW=ON
-cmake --build build --target DrummyPreview -j8
-./build/DrummyPreview_artefacts/Release/DrummyPreview docs
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMID_BUILD_PREVIEW=ON
+cmake --build build --target DrumidPreview -j8
+./build/DrumidPreview_artefacts/Release/DrumidPreview docs
 ```
 
 ## Layout
@@ -199,7 +199,7 @@ Source/
   UI/
     StepGrid.*          lane headers + step grid
     Icons.*             vector lane glyphs
-    DrummyLookAndFeel.*
+    DrumidLookAndFeel.*
 Tools/
   PreviewRender.cpp     renders the editor to PNG with no window
 ```
@@ -216,4 +216,4 @@ Tools/
 ## Licence
 
 Uses [JUCE](https://juce.com) 8, which is GPL3 for open source and requires a
-paid licence for closed-source distribution. Licence for Drummy itself: TBD.
+paid licence for closed-source distribution. Licence for DRUMid itself: TBD.

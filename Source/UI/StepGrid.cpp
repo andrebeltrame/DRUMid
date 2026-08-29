@@ -3,7 +3,7 @@
 #include "Icons.h"
 #include "../Engine/MidiExport.h"
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
 static constexpr int kIconX   = 8;
@@ -16,7 +16,7 @@ static constexpr int kLockX   = 160;
 static constexpr int kReroll  = 182;
 static constexpr int kBtnW    = 18;
 
-StepGrid::StepGrid (DrummyAudioProcessor& p) : proc (p)
+StepGrid::StepGrid (DrumidAudioProcessor& p) : proc (p)
 {
     setWantsKeyboardFocus (false);
 }
@@ -311,7 +311,7 @@ void StepGrid::mouseDrag (const juce::MouseEvent& e)
             return;
 
         juce::String name;
-        name << "Drummy_" << genreName (proc.settings().genre)
+        name << "DRUMid_" << genreName (proc.settings().genre)
              << "_" << kit.bars() << "bar_"
              << laneName ((LaneId) dragOrigin.lane)
              << "_" << proc.settings().seed;
@@ -411,4 +411,4 @@ void StepGrid::setPlayStep (int step)
     repaint();
 }
 
-} // namespace drummy::ui
+} // namespace drumid::ui

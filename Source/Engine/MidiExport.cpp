@@ -1,6 +1,6 @@
 #include "MidiExport.h"
 
-namespace drummy
+namespace drumid
 {
 
 static constexpr int    kTicksPerQuarter = 960;
@@ -76,7 +76,7 @@ bool MidiExport::lanesShareNotes (const Kit& kit)
 static juce::File writeMidiFile (const juce::MidiFile& file, const juce::String& baseName)
 {
     auto out = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                   .getChildFile ("Drummy")
+                   .getChildFile ("DRUMid")
                    .getChildFile (juce::File::createLegalFileName (baseName) + ".mid");
 
     out.getParentDirectory().createDirectory();
@@ -152,4 +152,4 @@ juce::File MidiExport::writeTempFile (const Kit& kit, const juce::String& baseNa
     return writeMidiFile (file, baseName);
 }
 
-} // namespace drummy
+} // namespace drumid

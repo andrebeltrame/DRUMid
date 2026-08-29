@@ -10,18 +10,18 @@
 #include <array>
 #include <atomic>
 
-/** Drummy - MIDI drum pattern generator for melodic house, organic house and techno.
+/** DRUMid - MIDI drum pattern generator for melodic house, organic house and techno.
 
     Built as an instrument that outputs MIDI (and silent audio) so Ableton can
-    route it: put Drummy on its own MIDI track, then on the Drum Rack track set
-    MIDI From -> <Drummy track> -> Drummy, Monitor: In. For committing a pattern
+    route it: put DRUMid on its own MIDI track, then on the Drum Rack track set
+    MIDI From -> <DRUMid track> -> DRUMid, Monitor: In. For committing a pattern
     to a clip, drag the MIDI out of the editor instead.
 */
-class DrummyAudioProcessor : public juce::AudioProcessor
+class DrumidAudioProcessor : public juce::AudioProcessor
 {
 public:
-    DrummyAudioProcessor();
-    ~DrummyAudioProcessor() override = default;
+    DrumidAudioProcessor();
+    ~DrumidAudioProcessor() override = default;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
@@ -48,11 +48,11 @@ public:
 
     // ---- editor-facing API (message thread only) --------------------------
 
-    drummy::Kit&         kit()      noexcept { return editKit; }
-    drummy::GenSettings& settings() noexcept { return gen; }
+    drumid::Kit&         kit()      noexcept { return editKit; }
+    drumid::GenSettings& settings() noexcept { return gen; }
 
-    drummy::NoteMapPreset noteMapPreset() const noexcept { return notePreset; }
-    void setNoteMapPreset (drummy::NoteMapPreset p);
+    drumid::NoteMapPreset noteMapPreset() const noexcept { return notePreset; }
+    void setNoteMapPreset (drumid::NoteMapPreset p);
 
     /** One-click generate: every enabled, unlocked lane gets a fresh pattern. */
     void generateAll (bool newSeed = true);
@@ -61,7 +61,7 @@ public:
         Locked lanes and the bar count survive - lock is a promise, and pattern
         length is a structural decision, not a flavour. */
     void randomizeAll();
-    void generateLane (drummy::LaneId lane);
+    void generateLane (drumid::LaneId lane);
 
     /** Copy the edited kit over to the audio thread. Call after any edit. */
     void publishKit();
@@ -80,17 +80,17 @@ public:
 private:
     void resetToDefaults();
 
-    drummy::Kit         editKit;
-    drummy::GenSettings gen;
-    drummy::NoteMapPreset notePreset = drummy::NoteMapPreset::SingleNoteC3;
+    drumid::Kit         editKit;
+    drumid::GenSettings gen;
+    drumid::NoteMapPreset notePreset = drumid::NoteMapPreset::SingleNoteC3;
 
-    std::array<drummy::Kit, 2> audioKits;
+    std::array<drumid::Kit, 2> audioKits;
     std::atomic<int> activeKit { 0 };
 
-    drummy::Sequencer sequencer;
+    drumid::Sequencer sequencer;
     std::atomic<bool> hostPlaying { false };
     std::atomic<bool> freeRun { false };
     std::atomic<double> freeBpm { 122.0 };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrummyAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumidAudioProcessor)
 };

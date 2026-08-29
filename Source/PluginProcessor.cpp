@@ -1,15 +1,15 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-using namespace drummy;
+using namespace drumid;
 
-DrummyAudioProcessor::DrummyAudioProcessor()
+DrumidAudioProcessor::DrumidAudioProcessor()
     : AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
     resetToDefaults();
 }
 
-void DrummyAudioProcessor::resetToDefaults()
+void DrumidAudioProcessor::resetToDefaults()
 {
     editKit.setBars (gen.bars);
     NoteMap::apply (editKit, notePreset);
@@ -19,23 +19,23 @@ void DrummyAudioProcessor::resetToDefaults()
 
 // ============================================================================
 
-void DrummyAudioProcessor::prepareToPlay (double sampleRate, int)
+void DrumidAudioProcessor::prepareToPlay (double sampleRate, int)
 {
     sequencer.prepare (sampleRate);
     publishKit();
 }
 
-bool DrummyAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool DrumidAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const auto& out = layouts.getMainOutputChannelSet();
     return out == juce::AudioChannelSet::stereo() || out == juce::AudioChannelSet::mono();
 }
 
-void DrummyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+void DrumidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
-    // Drummy makes no sound of its own - the Drum Rack does.
+    // DRUMid makes no sound of its own - the Drum Rack does.
     buffer.clear();
 
     // Incoming MIDI is not passed through; the host track is a generator, not a
@@ -71,14 +71,14 @@ void DrummyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 // ============================================================================
 
-void DrummyAudioProcessor::publishKit()
+void DrumidAudioProcessor::publishKit()
 {
     const int inactive = 1 - activeKit.load();
     audioKits[(size_t) inactive] = editKit;
     activeKit.store (inactive);
 }
 
-void DrummyAudioProcessor::setNoteMapPreset (NoteMapPreset p)
+void DrumidAudioProcessor::setNoteMapPreset (NoteMapPreset p)
 {
     notePreset = p;
     NoteMap::apply (editKit, p);
@@ -86,7 +86,7 @@ void DrummyAudioProcessor::setNoteMapPreset (NoteMapPreset p)
     kitChanged.sendChangeMessage();
 }
 
-void DrummyAudioProcessor::generateAll (bool newSeed)
+void DrumidAudioProcessor::generateAll (bool newSeed)
 {
     if (newSeed)
         gen.seed = juce::Random::getSystemRandom().nextInt ({ 1, 1000000 });
@@ -96,7 +96,7 @@ void DrummyAudioProcessor::generateAll (bool newSeed)
     kitChanged.sendChangeMessage();
 }
 
-void DrummyAudioProcessor::randomizeAll()
+void DrumidAudioProcessor::randomizeAll()
 {
     auto& r = juce::Random::getSystemRandom();
 
@@ -129,7 +129,7 @@ void DrummyAudioProcessor::randomizeAll()
     generateAll (true);
 }
 
-void DrummyAudioProcessor::generateLane (LaneId lane)
+void DrumidAudioProcessor::generateLane (LaneId lane)
 {
     const int idx = (int) lane;
     const int laneSeed = juce::Random::getSystemRandom().nextInt ({ 1, 1000000 }) + idx;
@@ -143,9 +143,9 @@ void DrummyAudioProcessor::generateLane (LaneId lane)
 //  state
 // ============================================================================
 
-void DrummyAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
+void DrumidAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
 {
-    juce::ValueTree state ("DRUMMY");
+    juce::ValueTree state ("DRUMid");
     state.setProperty ("version", 1, nullptr);
     state.setProperty ("genre", (int) gen.genre, nullptr);
     state.setProperty ("energy", gen.energy, nullptr);
@@ -193,7 +193,7 @@ void DrummyAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
         copyXmlToBinary (*xml, dest);
 }
 
-void DrummyAudioProcessor::setStateInformation (const void* data, int size)
+void DrumidAudioProcessor::setStateInformation (const void* data, int size)
 {
     auto xml = getXmlFromBinary (data, size);
 
@@ -202,7 +202,7 @@ void DrummyAudioProcessor::setStateInformation (const void* data, int size)
 
     auto state = juce::ValueTree::fromXml (*xml);
 
-    if (! state.hasType ("DRUMMY"))
+    if (! state.hasType ("DRUMid"))
         return;
 
     gen.genre       = (Genre) (int) state.getProperty ("genre", 0);
@@ -263,12 +263,12 @@ void DrummyAudioProcessor::setStateInformation (const void* data, int size)
 
 // ============================================================================
 
-juce::AudioProcessorEditor* DrummyAudioProcessor::createEditor()
+juce::AudioProcessorEditor* DrumidAudioProcessor::createEditor()
 {
-    return new DrummyAudioProcessorEditor (*this);
+    return new DrumidAudioProcessorEditor (*this);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new DrummyAudioProcessor();
+    return new DrumidAudioProcessor();
 }

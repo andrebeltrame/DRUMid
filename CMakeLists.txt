@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Drummy VERSION 0.1.0 LANGUAGES C CXX)
+project(DRUMid VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,30 +21,44 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 # AU needs a full Xcode install; VST3 + Standalone only need Command Line Tools.
-set(DRUMMY_FORMATS VST3 Standalone)
-if (APPLE AND DRUMMY_BUILD_AU)
-    list(APPEND DRUMMY_FORMATS AU)
+set(DRUMID_FORMATS VST3 Standalone)
+if (APPLE AND DRUMID_BUILD_AU)
+    list(APPEND DRUMID_FORMATS AU)
 endif()
 
-juce_add_plugin(Drummy
-    COMPANY_NAME                "Andre Beltrame"
-    BUNDLE_ID                   "com.andrebeltrame.drummy"
-    PLUGIN_MANUFACTURER_CODE    Abtr
-    PLUGIN_CODE                 Drmy
-    PRODUCT_NAME                "Drummy"
-    FORMATS                     ${DRUMMY_FORMATS}
+# Same house as the other plugins, so DRUMid lands in the same folder and shows
+# up under the same manufacturer in the DAW.
+option(DRUMID_COPY_AFTER_BUILD "Copy the VST3 into the system plugin folder" ON)
 
-    # Instrument with MIDI out: this is what lets Ableton route Drummy's MIDI
-    # into another track (MIDI From: <Drummy track> -> Drummy).
+if (APPLE)
+    set(DRUMID_VST3_DIR "$ENV{HOME}/Library/Audio/Plug-Ins/VST3/Nowhr Dynamics")
+elseif (WIN32)
+    set(DRUMID_VST3_DIR "$ENV{CommonProgramFiles}/VST3/Nowhr Dynamics")
+else()
+    set(DRUMID_VST3_DIR "$ENV{HOME}/.vst3/Nowhr Dynamics")
+endif()
+
+juce_add_plugin(DRUMid
+    COMPANY_NAME                "Nowhr Dynamics"
+    BUNDLE_ID                   "com.nowhrdynamics.drumid"
+    PLUGIN_MANUFACTURER_CODE    Nwhr
+    PLUGIN_CODE                 Drid
+    PRODUCT_NAME                "DRUMid"
+    FORMATS                     ${DRUMID_FORMATS}
+    VST3_CATEGORIES             "Instrument" "Tools"
+    VST3_COPY_DIR               "${DRUMID_VST3_DIR}"
+
+    # Instrument with MIDI out: this is what lets Ableton route DRUMid's MIDI
+    # into another track (MIDI From: <DRUMid track> -> DRUMid).
     IS_SYNTH                    TRUE
     IS_MIDI_EFFECT              FALSE
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    COPY_PLUGIN_AFTER_BUILD     TRUE
+    COPY_PLUGIN_AFTER_BUILD     ${DRUMID_COPY_AFTER_BUILD}
 )
 
-target_sources(Drummy PRIVATE
+target_sources(DRUMid PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Engine/PatternLibrary.cpp
@@ -54,19 +68,22 @@ target_sources(Drummy PRIVATE
     Source/Engine/MidiExport.cpp
     Source/UI/StepGrid.cpp
     Source/UI/Icons.cpp
-    Source/UI/DrummyLookAndFeel.cpp
+    Source/UI/AboutPanel.cpp
+    Source/UI/DrumidLookAndFeel.cpp
 )
 
-target_include_directories(Drummy PRIVATE Source)
+target_include_directories(DRUMid PRIVATE Source)
 
-target_compile_definitions(Drummy PUBLIC
+target_compile_definitions(DRUMid PUBLIC
+    DRUMID_VERSION="${PROJECT_VERSION}"
+    DRUMID_COMPANY="Nowhr Dynamics"
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
 )
 
-target_link_libraries(Drummy PRIVATE
+target_link_libraries(DRUMid PRIVATE
     juce::juce_audio_utils
     juce::juce_dsp
 PUBLIC
@@ -77,15 +94,15 @@ PUBLIC
 
 # ---------------------------------------------------------------------------
 #  Console checks for the engine and the exported MIDI.
-#    cmake -B build -DDRUMMY_BUILD_TESTS=ON
-#    cmake --build build --target DrummyTests && ./build/DrummyTests
+#    cmake -B build -DDRUMID_BUILD_TESTS=ON
+#    cmake --build build --target DrumidTests && ./build/DrumidTests
 # ---------------------------------------------------------------------------
-option(DRUMMY_BUILD_TESTS "Build the engine console tests" OFF)
+option(DRUMID_BUILD_TESTS "Build the engine console tests" OFF)
 
-if (DRUMMY_BUILD_TESTS)
-    juce_add_console_app(DrummyTests PRODUCT_NAME "DrummyTests")
+if (DRUMID_BUILD_TESTS)
+    juce_add_console_app(DrumidTests PRODUCT_NAME "DrumidTests")
 
-    target_sources(DrummyTests PRIVATE
+    target_sources(DrumidTests PRIVATE
         Tests/EngineTests.cpp
         Source/Engine/PatternLibrary.cpp
         Source/Engine/Generator.cpp
@@ -93,15 +110,15 @@ if (DRUMMY_BUILD_TESTS)
         Source/Engine/MidiExport.cpp
     )
 
-    target_include_directories(DrummyTests PRIVATE Source)
+    target_include_directories(DrumidTests PRIVATE Source)
 
-    target_compile_definitions(DrummyTests PRIVATE
+    target_compile_definitions(DrumidTests PRIVATE
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
         JUCE_STANDALONE_APPLICATION=1
     )
 
-    target_link_libraries(DrummyTests PRIVATE
+    target_link_libraries(DrumidTests PRIVATE
         juce::juce_audio_basics
         juce::juce_core
         juce::juce_recommended_config_flags
@@ -111,26 +128,28 @@ endif()
 # ---------------------------------------------------------------------------
 #  Renders the editor to PNG without opening a window - useful for reviewing
 #  the UI over a terminal, and for README screenshots.
-#    cmake -B build -DDRUMMY_BUILD_PREVIEW=ON
-#    cmake --build build --target DrummyPreview
+#    cmake -B build -DDRUMID_BUILD_PREVIEW=ON
+#    cmake --build build --target DrumidPreview
 # ---------------------------------------------------------------------------
-option(DRUMMY_BUILD_PREVIEW "Build the offscreen UI preview renderer" OFF)
+option(DRUMID_BUILD_PREVIEW "Build the offscreen UI preview renderer" OFF)
 
-if (DRUMMY_BUILD_PREVIEW)
-    juce_add_console_app(DrummyPreview PRODUCT_NAME "DrummyPreview")
+if (DRUMID_BUILD_PREVIEW)
+    juce_add_console_app(DrumidPreview PRODUCT_NAME "DrumidPreview")
 
-    target_sources(DrummyPreview PRIVATE Tools/PreviewRender.cpp)
-    target_include_directories(DrummyPreview PRIVATE Source)
+    target_sources(DrumidPreview PRIVATE Tools/PreviewRender.cpp)
+    target_include_directories(DrumidPreview PRIVATE Source)
 
-    target_compile_definitions(DrummyPreview PRIVATE
+    target_compile_definitions(DrumidPreview PRIVATE
+        DRUMID_VERSION="${PROJECT_VERSION}"
+        DRUMID_COMPANY="Nowhr Dynamics"
         JUCE_STANDALONE_APPLICATION=1
         JUCE_MODAL_LOOPS_PERMITTED=1
     )
 
     # The plugin target links its JUCE modules PRIVATE, so the preview has to
     # ask for the headers itself.
-    target_link_libraries(DrummyPreview PRIVATE
-        Drummy
+    target_link_libraries(DrumidPreview PRIVATE
+        DRUMid
         juce::juce_audio_utils
         juce::juce_dsp
         juce::juce_recommended_config_flags

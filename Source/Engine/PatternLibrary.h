@@ -3,7 +3,7 @@
 #include "Types.h"
 #include <vector>
 
-namespace drummy
+namespace drumid
 {
 
 /** A curated pattern seed.
@@ -44,4 +44,4 @@ namespace PatternLibrary
     int size();
 }
 
-} // namespace drummy
+} // namespace drumid

@@ -1,8 +1,8 @@
 /*  Console checks for the parts that are hard to hear a bug in:
     the generator's output shape and the .mid file that the drag-out produces.
 
-    cmake -B build -DDRUMMY_BUILD_TESTS=ON && cmake --build build --target DrummyTests
-    ./build/DrummyTests
+    cmake -B build -DDRUMID_BUILD_TESTS=ON && cmake --build build --target DrumidTests
+    ./build/DrumidTests
 */
 
 #include "Engine/Generator.h"
@@ -12,7 +12,7 @@
 
 #include <cstdio>
 
-using namespace drummy;
+using namespace drumid;
 
 static int failures = 0;
 
@@ -67,7 +67,7 @@ static void dump (const juce::String& title, const Kit& kit)
 
 int main()
 {
-    std::printf ("Drummy engine checks - %d seeds in the bank\n", PatternLibrary::size());
+    std::printf ("DRUMid engine checks - %d seeds in the bank\n", PatternLibrary::size());
 
     // ---- generator shape ---------------------------------------------------
     std::printf ("\ngenerator\n");
@@ -282,7 +282,7 @@ int main()
     {
         auto kit = makeKit (Genre::MelodicHouse, 0.6f, 0.4f, 2024, 2);
 
-        auto file = MidiExport::writeTempFile (kit, "DrummyTest_kit", -1);
+        auto file = MidiExport::writeTempFile (kit, "DrumidTest_kit", -1);
         check (file.existsAsFile() && file.getSize() > 0, "kit .mid is written");
 
         juce::FileInputStream in (file);
@@ -360,7 +360,7 @@ int main()
             check (NoteMap::noteName (60) == "C3", "note 60 is named C3");
             check (MidiExport::lanesShareNotes (single), "shared notes are detected");
 
-            auto multi = MidiExport::writeKitTempFile (single, "DrummyTest_single");
+            auto multi = MidiExport::writeKitTempFile (single, "DrumidTest_single");
             juce::FileInputStream in3 (multi);
             juce::MidiFile readMulti;
             readMulti.readFrom (in3);
@@ -400,7 +400,7 @@ int main()
             NoteMap::apply (gm, NoteMapPreset::GeneralMidi);
             check (! MidiExport::lanesShareNotes (gm), "the GM map keeps lanes on distinct notes");
 
-            auto flat = MidiExport::writeKitTempFile (gm, "DrummyTest_gm");
+            auto flat = MidiExport::writeKitTempFile (gm, "DrumidTest_gm");
             juce::FileInputStream in4 (flat);
             juce::MidiFile readFlat;
             readFlat.readFrom (in4);
@@ -411,7 +411,7 @@ int main()
         }
 
         // Single-lane drag.
-        auto kickOnly = MidiExport::writeTempFile (kit, "DrummyTest_kick", (int) LaneId::Kick);
+        auto kickOnly = MidiExport::writeTempFile (kit, "DrumidTest_kick", (int) LaneId::Kick);
         juce::FileInputStream in2 (kickOnly);
         juce::MidiFile readKick;
         readKick.readFrom (in2);

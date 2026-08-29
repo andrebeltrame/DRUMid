@@ -1,9 +1,9 @@
-#include "DrummyLookAndFeel.h"
+#include "DrumidLookAndFeel.h"
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
-DrummyLookAndFeel::DrummyLookAndFeel()
+DrumidLookAndFeel::DrumidLookAndFeel()
 {
     setColour (juce::ResizableWindow::backgroundColourId, Colours::background);
     setColour (juce::Label::textColourId,                 Colours::text);
@@ -24,7 +24,7 @@ DrummyLookAndFeel::DrummyLookAndFeel()
     setColour (juce::ToggleButton::tickColourId,          Colours::accent);
 }
 
-void DrummyLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int h,
+void DrumidLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int h,
                                           float sliderPos, float startAngle, float endAngle,
                                           juce::Slider&)
 {
@@ -57,7 +57,7 @@ void DrummyLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w
                                                  juce::PathStrokeType::rounded));
 }
 
-void DrummyLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& b,
+void DrumidLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& b,
                                               const juce::Colour& base,
                                               bool highlighted, bool down)
 {
@@ -76,7 +76,7 @@ void DrummyLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& b
     g.drawRoundedRectangle (bounds, 4.0f, 1.0f);
 }
 
-void DrummyLookAndFeel::drawComboBox (juce::Graphics& g, int w, int h, bool,
+void DrumidLookAndFeel::drawComboBox (juce::Graphics& g, int w, int h, bool,
                                       int, int, int, int, juce::ComboBox& box)
 {
     auto bounds = juce::Rectangle<float> (0.0f, 0.0f, (float) w, (float) h).reduced (0.5f);
@@ -98,9 +98,9 @@ void DrummyLookAndFeel::drawComboBox (juce::Graphics& g, int w, int h, bool,
                                                juce::PathStrokeType::rounded));
 }
 
-juce::Font DrummyLookAndFeel::getLabelFont (juce::Label& label)
+juce::Font DrumidLookAndFeel::getLabelFont (juce::Label& label)
 {
     return { juce::FontOptions ((float) juce::jmin (15, label.getHeight() - 2)) };
 }
 
-} // namespace drummy::ui
+} // namespace drumid::ui

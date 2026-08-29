@@ -2,7 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
 namespace Colours
@@ -20,10 +20,10 @@ namespace Colours
     const juce::Colour danger       { 0xffe0554b };
 }
 
-class DrummyLookAndFeel : public juce::LookAndFeel_V4
+class DrumidLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
-    DrummyLookAndFeel();
+    DrumidLookAndFeel();
 
     void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h,
                            float sliderPos, float startAngle, float endAngle,
@@ -38,4 +38,4 @@ public:
     juce::Font getLabelFont (juce::Label&) override;
 };
 
-} // namespace drummy::ui
+} // namespace drumid::ui

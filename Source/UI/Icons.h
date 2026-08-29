@@ -3,7 +3,7 @@
 #include "../Engine/Types.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
-namespace drummy::ui
+namespace drumid::ui
 {
 
 /** Lane glyphs, drawn as vectors so they stay crisp at any editor size.
@@ -23,4 +23,4 @@ namespace Icons
     void drawSparkle (juce::Graphics&, juce::Rectangle<float> area, juce::Colour);
 }
 
-} // namespace drummy::ui
+} // namespace drumid::ui

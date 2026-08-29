@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace drummy
+namespace drumid
 {
 
 static constexpr double kPpqPerStep = 0.25;   // one 16th note
@@ -163,4 +163,4 @@ void Sequencer::processFreeRunning (const Kit& kit, juce::MidiBuffer& midi, int 
     freePpq += numSamples * ppqPerSample;
 }
 
-} // namespace drummy
+} // namespace drumid
