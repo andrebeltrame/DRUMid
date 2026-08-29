@@ -157,28 +157,6 @@ int main()
             check (sparse <= 24, "a low Energy kit actually stays sparse");
         }
 
-        // The shaker and the percussion must not end up playing the same rhythm.
-        {
-            const auto kit = makeKit (Genre::AfroHouse, 0.7f, 0.5f, 8080, 2);
-            const auto& sh = kit.patterns[(size_t) LaneId::Shaker];
-            const auto& pc = kit.patterns[(size_t) LaneId::Percussion];
-
-            int both = 0, either = 0;
-
-            for (int i = 0; i < kit.numSteps; ++i)
-            {
-                const bool a = sh.steps[(size_t) i].on;
-                const bool b = pc.steps[(size_t) i].on;
-
-                if (a && b) ++both;
-                if (a || b) ++either;
-            }
-
-            const float overlap = either > 0 ? (float) both / (float) either : 0.0f;
-            std::printf ("       shaker/perc overlap: %.0f%%\n", overlap * 100.0f);
-            check (overlap < 0.45f, "shaker and percussion play different rhythms");
-        }
-
         // A tom has to be allowed to reinforce the kick. The earlier blanket rule
         // turned techno's rolling 8th tom into an offbeat tom - 8 hits down to 4.
         {
@@ -232,6 +210,91 @@ int main()
             check (afroPerc > 4.0f, "afro house percussion is never starved to a fill");
             check (afroPerc > afroHat * 0.6f, "afro house lets the congas hold their ground");
             check (techHat > techPerc, "techno still gives the hat priority");
+        }
+
+        // The hand-percussion family must not end up playing the same rhythm.
+        {
+            auto overlap = [] (Genre genre, LaneId a, LaneId b)
+            {
+                int both = 0, either = 0;
+
+                for (int t = 0; t < 16; ++t)
+                {
+                    auto kit = makeKit (genre, 0.7f, 0.5f, 8000 + t, 2);
+                    kit.lanes[(size_t) LaneId::Percussion2].enabled = true;
+
+                    GenSettings gs;
+                    gs.genre = genre; gs.energy = 0.7f; gs.complexity = 0.5f;
+                    gs.bars = 2; gs.seed = 8000 + t;
+                    Generator::generate (kit, gs);
+
+                    for (int i = 0; i < kit.numSteps; ++i)
+                    {
+                        const bool x = kit.patterns[(size_t) a].steps[(size_t) i].on;
+                        const bool y = kit.patterns[(size_t) b].steps[(size_t) i].on;
+
+                        if (x && y) ++both;
+                        if (x || y) ++either;
+                    }
+                }
+
+                return either > 0 ? (float) both / (float) either : 0.0f;
+            };
+
+            const float shakerPerc = overlap (Genre::AfroHouse, LaneId::Shaker, LaneId::Percussion);
+            const float percPerc2  = overlap (Genre::AfroHouse, LaneId::Percussion, LaneId::Percussion2);
+
+            std::printf ("       shaker/perc overlap %.0f%%, perc/perc2 overlap %.0f%%\n",
+                         shakerPerc * 100.0f, percPerc2 * 100.0f);
+
+            check (shakerPerc < 0.35f, "the shaker and the percussion play different rhythms");
+            check (percPerc2  < 0.35f, "perc 2 answers the percussion instead of doubling it");
+        }
+
+        // Perc 2 is an optional extra voice, so it has to start switched off.
+        {
+            Kit fresh;
+            check (! fresh.lanes[(size_t) LaneId::Percussion2].enabled,
+                   "perc 2 is off by default");
+            check (fresh.lanes[(size_t) LaneId::Kick].dynamics
+                     < fresh.lanes[(size_t) LaneId::Shaker].dynamics,
+                   "the kick starts steadier than the shaker");
+        }
+
+        // Per-lane dynamics has to actually change the velocity spread, or the
+        // control is decoration.
+        {
+            auto spread = [] (float laneDynamics)
+            {
+                Kit kit;
+                GenSettings gs;
+                gs.genre = Genre::AfroHouse; gs.energy = 0.7f; gs.complexity = 0.4f;
+                gs.bars = 2; gs.seed = 606; gs.humanVel = 0.6f;
+
+                kit.lanes[(size_t) LaneId::Shaker].dynamics = laneDynamics;
+                Generator::generate (kit, gs);
+
+                float lo = 2.0f, hi = 0.0f;
+
+                for (int i = 0; i < kit.numSteps; ++i)
+                {
+                    const auto& st = kit.patterns[(size_t) LaneId::Shaker].steps[(size_t) i];
+
+                    if (! st.on)
+                        continue;
+
+                    lo = juce::jmin (lo, st.velocity);
+                    hi = juce::jmax (hi, st.velocity);
+                }
+
+                return hi > lo ? hi - lo : 0.0f;
+            };
+
+            const float steady = spread (0.0f);
+            const float loose  = spread (2.0f);
+
+            std::printf ("       shaker velocity spread: %.2f at 0%%, %.2f at 200%%\n", steady, loose);
+            check (loose > steady, "per-lane dynamics widens that element's velocity spread");
         }
 
         // Swing has to be real micro-timing, not a quantised lie.

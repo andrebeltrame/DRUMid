@@ -69,12 +69,6 @@ public:
     int  currentStep() const noexcept { return sequencer.currentStep(); }
     bool isHostPlaying() const noexcept { return hostPlaying.load(); }
 
-    /** Standalone has no host transport, so it free-runs on its own clock. */
-    bool freeRunEnabled() const noexcept { return freeRun.load(); }
-    void setFreeRunEnabled (bool b) noexcept { freeRun.store (b); }
-    double freeRunBpm() const noexcept { return freeBpm.load(); }
-    void setFreeRunBpm (double b) noexcept { freeBpm.store (juce::jlimit (40.0, 220.0, b)); }
-
     juce::ChangeBroadcaster kitChanged;
 
 private:
@@ -89,8 +83,6 @@ private:
 
     drumid::Sequencer sequencer;
     std::atomic<bool> hostPlaying { false };
-    std::atomic<bool> freeRun { false };
-    std::atomic<double> freeBpm { 122.0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumidAudioProcessor)
 };

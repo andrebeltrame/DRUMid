@@ -224,6 +224,41 @@ static const Seed kSeeds[] =
     { Genre::Techno,        LaneId::Percussion, "sparse metal",    "......x.........",         0.0f, 1.0f, 2.5f },
     { Genre::Techno,        LaneId::Percussion, "syncopated pair", "...x........x...",         0.0f, 1.0f, 2.2f },
     { Genre::Techno,        LaneId::Percussion, "3-against-4",     "x..x..x..x..x...",         0.4f, 1.0f, 1.8f },
+
+    // ============================================================================
+    //  PERCUSSION 2  (optional second hand voice)
+    //
+    //  This lane answers the first percussion rather than doubling it, so the
+    //  seeds are deliberately sparser and sit off the clave's strong points. The
+    //  generator also displaces it away from whatever the shaker and the first
+    //  percussion already play - two hand voices on the same rhythm is one
+    //  voice's worth of groove for two voices' worth of mud.
+    // ============================================================================
+    { Genre::OrganicHouse,  LaneId::Percussion2, "offbeat answer",  "...x..x...x..x..",         0.0f, 1.0f, 2.5f },
+    { Genre::OrganicHouse,  LaneId::Percussion2, "tick pairs",      "..x.x.....x.x...",         0.0f, 1.0f, 2.2f },
+    { Genre::OrganicHouse,  LaneId::Percussion2, "sparse call",     "....x.......x..x",         0.0f, 0.8f, 2.0f },
+    { Genre::OrganicHouse,  LaneId::Percussion2, "2-side clave",    "......X...X.....",         0.2f, 1.0f, 1.8f },
+
+    { Genre::AfroHouse,     LaneId::Percussion2, "high answer",     "...x..x...x..x..",         0.0f, 1.0f, 2.5f },
+    { Genre::AfroHouse,     LaneId::Percussion2, "bongo fill",      "...x.x....x.x.x.",         0.3f, 1.0f, 2.2f },
+    { Genre::AfroHouse,     LaneId::Percussion2, "2-side clave",    "......X...X.....",         0.0f, 1.0f, 2.0f },
+    { Genre::AfroHouse,     LaneId::Percussion2, "sparse call",     "..x....x..x....x",         0.0f, 0.9f, 2.0f },
+
+    { Genre::IndieDance,    LaneId::Percussion2, "backbeat answer", "....x.......x...",         0.0f, 1.0f, 2.2f },
+    { Genre::IndieDance,    LaneId::Percussion2, "offbeat tick",    "..x...x.........",         0.0f, 1.0f, 2.0f },
+    { Genre::IndieDance,    LaneId::Percussion2, "late call",       "..............x.",         0.0f, 0.7f, 1.5f },
+
+    { Genre::MelodicHouse,  LaneId::Percussion2, "offbeat tick",    "......x.......x.",         0.0f, 1.0f, 2.2f },
+    { Genre::MelodicHouse,  LaneId::Percussion2, "16th answer",     "...x......x.....",         0.0f, 1.0f, 2.0f },
+    { Genre::MelodicHouse,  LaneId::Percussion2, "one per bar",     "..........x.....",         0.0f, 0.7f, 1.6f },
+
+    { Genre::MelodicTechno, LaneId::Percussion2, "far tick",        ".....x.....x....",         0.0f, 1.0f, 2.2f },
+    { Genre::MelodicTechno, LaneId::Percussion2, "syncopated pair", "...x........x...",         0.0f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Percussion2, "one per bar",     "........x.......",         0.0f, 0.8f, 1.6f },
+
+    { Genre::Techno,        LaneId::Percussion2, "single hit",      "........x.......",         0.0f, 1.0f, 2.2f },
+    { Genre::Techno,        LaneId::Percussion2, "syncopated pair", "..x.........x...",         0.0f, 1.0f, 2.0f },
+    { Genre::Techno,        LaneId::Percussion2, "3-against-4",     "..x..x..x..x....",         0.4f, 1.0f, 1.6f },
 };
 
 static constexpr int kNumSeeds = (int) (sizeof (kSeeds) / sizeof (kSeeds[0]));

@@ -206,26 +206,39 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
         }
 
         case LaneId::Percussion:
-            // Two hand-percussion lanes playing the same rhythm is one lane's
-            // worth of groove for two lanes' worth of mud. Percussion generates
-            // after the shaker, so it is the one that moves.
+        case LaneId::Percussion2:
+            // Two hand voices playing the same rhythm is one voice's worth of
+            // groove for two voices' worth of mud. The family generates shaker,
+            // then percussion, then perc 2, so each one moves out of the way of
+            // whatever is already there.
             {
-                const auto& shaker = kit.patterns[(size_t) LaneId::Shaker];
-
-                if (kit.lanes[(size_t) LaneId::Shaker].enabled)
+                static const LaneId family[] =
                 {
+                    LaneId::Shaker, LaneId::Percussion, LaneId::Percussion2
+                };
+
+                for (auto other : family)
+                {
+                    if (other == lane)
+                        break;   // only dodge the voices generated before this one
+
+                    if (! kit.lanes[(size_t) other].enabled)
+                        continue;
+
+                    const auto& earlier = kit.patterns[(size_t) other];
+
                     for (int i = 0; i < n; ++i)
                     {
                         auto& st = me.steps[(size_t) i];
 
-                        if (! st.on || ! shaker.steps[(size_t) i].on)
+                        if (! st.on || ! earlier.steps[(size_t) i].on)
                             continue;
 
                         if (! rng.chance (0.65f))
                             continue;
 
                         if (i + 1 < n && ! me.steps[(size_t) (i + 1)].on
-                            && ! shaker.steps[(size_t) (i + 1)].on)
+                            && ! earlier.steps[(size_t) (i + 1)].on)
                         {
                             me.steps[(size_t) (i + 1)] = st;
                             st.clear();
@@ -329,7 +342,8 @@ static void applyDensity (LanePattern& p, LaneId lane, const GenSettings& s, Rng
     }
 }
 
-static void applyGroove (LanePattern& p, LaneId lane, const GenSettings& s, Rng& rng)
+static void applyGroove (LanePattern& p, LaneId lane, const GenSettings& s, Rng& rng,
+                         float laneDynamics)
 {
     const int n = p.numSteps;
 
@@ -352,7 +366,9 @@ static void applyGroove (LanePattern& p, LaneId lane, const GenSettings& s, Rng&
         st.micro += rng.bi() * s.humanTiming * 0.12f * timingScale;
         st.micro  = clamp (st.micro, -0.45f, 0.45f);
 
-        st.velocity *= 1.0f + rng.bi() * s.humanVel * 0.35f;
+        // The per-lane amount is what stops every element breathing by exactly
+        // the same amount, which is the tell of a programmed kit.
+        st.velocity *= 1.0f + rng.bi() * s.humanVel * laneDynamics * 0.35f;
 
         // Downbeat reinforcement keeps the bar readable after humanizing.
         if (i % 4 == 0)
@@ -520,8 +536,9 @@ static float laneImportance (Genre genre, LaneId lane)
         case Genre::AfroHouse:
             switch (lane)
             {
-                case LaneId::Percussion: return 2.0f;   // the lead voice
-                case LaneId::Shaker:     return 1.6f;
+                case LaneId::Percussion:  return 2.0f;   // the lead voice
+                case LaneId::Percussion2: return 1.7f;
+                case LaneId::Shaker:      return 1.6f;
                 case LaneId::Tom:        return 1.1f;
                 case LaneId::OpenHat:    return 0.9f;
                 case LaneId::ClosedHat:  return 0.7f;   // steps back first
@@ -531,10 +548,11 @@ static float laneImportance (Genre genre, LaneId lane)
         case Genre::IndieDance:
             switch (lane)
             {
-                case LaneId::ClosedHat:  return 1.4f;
-                case LaneId::OpenHat:    return 1.1f;
-                case LaneId::Percussion: return 1.1f;
-                default:                 return 1.0f;
+                case LaneId::ClosedHat:   return 1.4f;
+                case LaneId::OpenHat:     return 1.1f;
+                case LaneId::Percussion:  return 1.1f;
+                case LaneId::Percussion2: return 1.0f;
+                default:                  return 1.0f;
             }
 
         case Genre::MelodicHouse:
@@ -573,7 +591,8 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
 {
     static const LaneId colour[] =
     {
-        LaneId::Tom, LaneId::ClosedHat, LaneId::OpenHat, LaneId::Shaker, LaneId::Percussion
+        LaneId::Tom, LaneId::ClosedHat, LaneId::OpenHat,
+        LaneId::Shaker, LaneId::Percussion, LaneId::Percussion2
     };
 
     const int bars = kit.numSteps / kStepsPerBar;
@@ -675,7 +694,8 @@ static void buildLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed
     applyCompatibility (kit, lane, s, rng);
     applyBarVariation (kit.patterns[(size_t) idx], lane, s, rng);
     applyFill (kit, lane, s, rng);
-    applyGroove (kit.patterns[(size_t) idx], lane, s, rng);
+    applyGroove (kit.patterns[(size_t) idx], lane, s, rng,
+                 kit.lanes[(size_t) idx].dynamics);
     applyGenreGuards (kit.patterns[(size_t) idx], lane, s);
 }
 
@@ -696,10 +716,10 @@ void Generator::generate (Kit& kit, const GenSettings& s)
     {
         LaneId::Kick, LaneId::Clap, LaneId::Tom,
         LaneId::OpenHat, LaneId::ClosedHat,
-        LaneId::Shaker, LaneId::Percussion
+        LaneId::Shaker, LaneId::Percussion, LaneId::Percussion2
     };
 
-    static_assert ((int) LaneId::NumLanes == 7,
+    static_assert ((int) LaneId::NumLanes == 8,
                    "add the new lane to the generation order - order is the groove");
 
     kit.setBars (s.bars);

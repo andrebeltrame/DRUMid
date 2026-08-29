@@ -15,9 +15,9 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 | | |
 |---|---|
 | Formats | VST3, Standalone (universal binary: arm64 + x86_64) |
-| Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion |
+| Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion, Perc 2 |
 | Genres | Organic House, Afro House, Indie Dance, Melodic House, Melodic Techno, Techno |
-| Seed bank | 137 curated patterns |
+| Seed bank | 157 curated patterns |
 | Pattern length | 1, 2 or 4 bars |
 
 ![Afro House](docs/drumid-afro-house.png)
@@ -148,9 +148,15 @@ and only the unlocked lanes change.
 ## The two buttons
 
 **GENERATE** rerolls the patterns under the settings you chose. **SURPRISE**
-rerolls the settings too — genre, energy, complexity and feel — and then
-generates. Locked lanes and the bar count survive both: a lock is a promise, and
-pattern length is a structural decision rather than a flavour.
+rerolls the settings too — genre, energy, complexity, feel, and each element's
+own dynamic character — and then generates. Locked lanes and the bar count
+survive both: a lock is a promise, and pattern length is a structural decision
+rather than a flavour.
+
+To redo one drum on its own, hit that lane's **R**.
+
+There is no transport button. DRUMid follows the host and nothing else: it is a
+MIDI writer, not a player with its own clock.
 
 ## Editing the grid
 
@@ -162,12 +168,29 @@ pattern length is a structural decision rather than a flavour.
 | lane name | enable / disable the lane |
 | drag the lane icon | export that lane alone as MIDI |
 | `L` | lock — GENERATE will not touch this lane |
-| `R` | reroll just this lane |
+| `R` | redo just that drum |
+| drag `DYN` | how far this element's velocity moves |
 | drag the note | retune the lane (switches the map to Custom) |
 
 There is no mute or solo. Every lane drives its own instrument, so enable/disable
 is the only switch that means anything here — a muted-but-still-generated lane is
 just a lane you forgot to turn back on.
+
+### Dynamics per element
+
+`DYN` is how hard that one element's velocity is randomised, as a multiplier on
+the global DYNAMICS knob. It matters because giving every lane the same amount
+is the tell of a programmed kit: a shaker wants to breathe, a kick usually does
+not. Defaults follow that — 35% on the kick, 140% on the shaker and the congas —
+and SURPRISE rolls each element's amount along with everything else.
+
+### The second percussion
+
+**Perc 2** is an optional extra hand voice and starts switched off. Its seeds are
+deliberately sparser than the first percussion's and sit off the clave's strong
+points, and the generator displaces it away from whatever the shaker and the
+first percussion already play. Two hand voices on the same rhythm is one voice's
+worth of groove for two voices' worth of mud.
 
 Step blocks are drawn shifted by their real micro-timing, so swing and humanize
 are visible and not just audible.
@@ -207,7 +230,7 @@ Tools/
 ## Not there yet
 
 - More lanes: snare, ghost snare, rim, ride, crash, tambourine, FX
-- The shaker and the percussion lane can still land on near-identical rhythms
+- Host-automatable parameters (state saves and recalls, but nothing is automatable)
 - Host-automatable parameters (state saves and recalls, but nothing is automatable yet)
 - Preset browser
 - Pattern-length-per-lane (polymeter)

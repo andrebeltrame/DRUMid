@@ -61,12 +61,9 @@ void DrumidAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
     hostPlaying.store (playing);
 
-    if (playing)
-        sequencer.process (k, midi, n, ppq, bpm, true);
-    else if (freeRun.load())
-        sequencer.processFreeRunning (k, midi, n, freeBpm.load());
-    else
-        sequencer.process (k, midi, n, ppq, bpm, false);
+    // DRUMid follows the host transport and nothing else: it is a MIDI writer,
+    // not a player with its own clock.
+    sequencer.process (k, midi, n, ppq, bpm, playing);
 }
 
 // ============================================================================
@@ -126,6 +123,22 @@ void DrumidAudioProcessor::randomizeAll()
     gen.humanVel    = 0.10f + r.nextFloat() * 0.35f;
     gen.fills       = r.nextFloat() < 0.8f;
 
+    // Roll each element's own dynamic character too, which is what stops a
+    // surprise from sounding like the same kit with different notes. The kick
+    // and the clap stay near steady - a lurching backbeat is not a surprise,
+    // it is a mistake.
+    for (int i = 0; i < kNumLanes; ++i)
+    {
+        if (editKit.lanes[(size_t) i].locked)
+            continue;
+
+        const auto lane = (LaneId) i;
+        const bool anchor = lane == LaneId::Kick || lane == LaneId::Clap;
+
+        editKit.lanes[(size_t) i].dynamics = anchor ? 0.2f + r.nextFloat() * 0.45f
+                                                    : 0.5f + r.nextFloat() * 1.2f;
+    }
+
     generateAll (true);
 }
 
@@ -157,8 +170,6 @@ void DrumidAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
     state.setProperty ("seed", gen.seed, nullptr);
     state.setProperty ("fills", gen.fills, nullptr);
     state.setProperty ("noteMap", (int) notePreset, nullptr);
-    state.setProperty ("freeRun", freeRun.load(), nullptr);
-    state.setProperty ("freeBpm", freeBpm.load(), nullptr);
 
     for (int i = 0; i < kNumLanes; ++i)
     {
@@ -170,6 +181,7 @@ void DrumidAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
         lane.setProperty ("locked", ls.locked, nullptr);
         lane.setProperty ("note", ls.midiNote, nullptr);
         lane.setProperty ("gain", ls.gain, nullptr);
+        lane.setProperty ("dynamics", ls.dynamics, nullptr);
 
         // Steps are packed as "on:vel:micro:prob:ratchet" per step, comma joined.
         juce::StringArray packed;
@@ -215,8 +227,6 @@ void DrumidAudioProcessor::setStateInformation (const void* data, int size)
     gen.seed        = (int)   state.getProperty ("seed", 1);
     gen.fills       = (bool)  state.getProperty ("fills", true);
     notePreset      = (NoteMapPreset) (int) state.getProperty ("noteMap", 0);
-    freeRun.store ((bool) state.getProperty ("freeRun", false));
-    freeBpm.store ((double) state.getProperty ("freeBpm", 122.0));
 
     editKit.setBars (gen.bars);
 
@@ -232,6 +242,7 @@ void DrumidAudioProcessor::setStateInformation (const void* data, int size)
         ls.locked   = (bool) lane.getProperty ("locked", false);
         ls.midiNote = (int)  lane.getProperty ("note", 36);
         ls.gain     = (float) lane.getProperty ("gain", 1.0);
+        ls.dynamics = (float) lane.getProperty ("dynamics", 1.0);
 
         auto& p = editKit.patterns[(size_t) i];
         p.clear();

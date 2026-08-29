@@ -152,8 +152,8 @@ DrumidAudioProcessorEditor::DrumidAudioProcessorEditor (DrumidAudioProcessor& p)
     proc.kitChanged.addChangeListener (this);
 
     setResizable (true, true);
-    setResizeLimits (780, 420, 1600, 900);
-    setSize (980, 500);
+    setResizeLimits (820, 470, 1600, 980);
+    setSize (1020, 552);
 
     refreshFromProcessor();
     startTimerHz (30);
@@ -189,8 +189,9 @@ void DrumidAudioProcessorEditor::buildControls()
     brandButton.setTooltip ("About DRUMid");
     addAndMakeVisible (brandButton);
 
-    hintLabel.setText ("click a lane name to disable  -  drag its icon to export that lane  -  "
-                       "L lock  -  R reroll  -  alt+drag a step for velocity  -  double click for ratchet",
+    hintLabel.setText ("R redoes just that drum  -  L locks it  -  drag DYN for how much its velocity moves  -  "
+                       "click the name to disable  -  drag the icon to export the lane  -  "
+                       "alt+drag a step for velocity  -  double click for ratchet",
                        juce::dontSendNotification);
     hintLabel.setFont (juce::FontOptions (10.5f));
     hintLabel.setColour (juce::Label::textColourId, Colours::textDim);
@@ -249,11 +250,6 @@ void DrumidAudioProcessorEditor::buildControls()
     surpriseButton.setColour (juce::TextButton::textColourOffId, Colours::text);
     addAndMakeVisible (surpriseButton);
 
-    playButton.setClickingTogglesState (true);
-    playButton.setColour (juce::TextButton::buttonColourId, Colours::panelLight);
-    playButton.onClick = [this] { proc.setFreeRunEnabled (playButton.getToggleState()); };
-    addAndMakeVisible (playButton);
-
     fillsButton.onClick = [this]
     {
         proc.settings().fills = fillsButton.getToggleState();
@@ -288,7 +284,6 @@ void DrumidAudioProcessorEditor::refreshFromProcessor()
     humanTiming.setValue (s.humanTiming, juce::dontSendNotification);
     humanVel.setValue (s.humanVel, juce::dontSendNotification);
     fillsButton.setToggleState (s.fills, juce::dontSendNotification);
-    playButton.setToggleState (proc.freeRunEnabled(), juce::dontSendNotification);
 
     seedLabel.setText ("seed " + juce::String (s.seed), juce::dontSendNotification);
     grid.repaint();
@@ -311,9 +306,6 @@ void DrumidAudioProcessorEditor::showAbout (bool shouldBeVisible)
 void DrumidAudioProcessorEditor::timerCallback()
 {
     grid.setPlayStep (proc.currentStep());
-
-    // The free-run button is only meaningful when there is no host transport.
-    playButton.setEnabled (! proc.isHostPlaying());
 }
 
 void DrumidAudioProcessorEditor::paint (juce::Graphics& g)
@@ -344,8 +336,6 @@ void DrumidAudioProcessorEditor::resized()
     top.removeFromLeft (8);
     noteMapBox.setBounds (top.removeFromLeft (140).reduced (0, 1));
     seedLabel.setBounds (top.removeFromRight (90));
-    top.removeFromRight (8);
-    playButton.setBounds (top.removeFromRight (70).reduced (0, 1));
 
     // ---- control strip
     auto controls = area.removeFromTop (78).reduced (10, 6);

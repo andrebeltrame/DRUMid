@@ -34,6 +34,7 @@ enum class LaneId
     OpenHat,
     Shaker,
     Percussion,
+    Percussion2,
     NumLanes
 };
 
@@ -50,6 +51,7 @@ inline const char* laneName (LaneId l) noexcept
         case LaneId::OpenHat:    return "Open Hat";
         case LaneId::Shaker:     return "Shaker";
         case LaneId::Percussion: return "Percussion";
+        case LaneId::Percussion2:return "Perc 2";
         default:                 return "?";
     }
 }
@@ -110,10 +112,32 @@ struct LaneSettings
     bool locked   = false;   // locked lanes are never touched by Generate
     int  midiNote = 36;
     float gain    = 1.0f;    // velocity scaler, 0..1.5
+
+    /** How hard this element's velocity is randomised, as a multiplier on the
+        global DYNAMICS amount. A shaker wants to breathe; a kick usually does
+        not, and giving every lane the same amount is what makes a generated
+        kit sound uniformly programmed. */
+    float dynamics = 1.0f;   // 0 .. 2
 };
 
 struct Kit
 {
+    Kit()
+    {
+        // The second percussion is an optional extra voice, so it starts off.
+        lanes[(size_t) LaneId::Percussion2].enabled = false;
+
+        // Sensible starting character: the hands breathe, the kick stays put.
+        lanes[(size_t) LaneId::Kick].dynamics        = 0.35f;
+        lanes[(size_t) LaneId::Clap].dynamics        = 0.55f;
+        lanes[(size_t) LaneId::Tom].dynamics         = 0.9f;
+        lanes[(size_t) LaneId::ClosedHat].dynamics   = 1.1f;
+        lanes[(size_t) LaneId::OpenHat].dynamics     = 0.8f;
+        lanes[(size_t) LaneId::Shaker].dynamics      = 1.4f;
+        lanes[(size_t) LaneId::Percussion].dynamics  = 1.4f;
+        lanes[(size_t) LaneId::Percussion2].dynamics = 1.5f;
+    }
+
     std::array<LanePattern,  kNumLanes> patterns {};
     std::array<LaneSettings, kNumLanes> lanes {};
     int numSteps = kStepsPerBar;

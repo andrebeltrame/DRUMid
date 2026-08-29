@@ -28,7 +28,7 @@ static bool renderOne (Genre genre, float energy, float complexity, int bars,
     if (editor == nullptr)
         return false;
 
-    const int w = 980, h = 500;
+    const int w = 1020, h = 552;
     editor->setSize (w, h);
     editor->setVisible (true);
 

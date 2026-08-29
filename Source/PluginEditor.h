@@ -84,7 +84,6 @@ private:
     juce::ComboBox    genreBox, barsBox, noteMapBox;
     IconButton        generateButton;
     IconButton        surpriseButton;
-    juce::TextButton  playButton { "PLAY" };
     juce::ToggleButton fillsButton { "Fills" };
 
     juce::Slider energy, complexity, swing, humanTiming, humanVel;

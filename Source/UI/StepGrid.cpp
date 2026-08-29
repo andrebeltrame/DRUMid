@@ -12,8 +12,10 @@ static constexpr int kNameX   = 38;
 static constexpr int kNameW   = 78;
 static constexpr int kNoteX   = 120;
 static constexpr int kNoteW   = 34;
-static constexpr int kLockX   = 160;
-static constexpr int kReroll  = 182;
+static constexpr int kDynX    = 158;
+static constexpr int kDynW    = 40;
+static constexpr int kLockX   = 204;
+static constexpr int kReroll  = 226;
 static constexpr int kBtnW    = 18;
 
 StepGrid::StepGrid (DrumidAudioProcessor& p) : proc (p)
@@ -126,6 +128,23 @@ void StepGrid::drawHeader (juce::Graphics& g, int lane, juce::Rectangle<int> row
     g.setFont (juce::FontOptions (11.0f));
     g.drawText (NoteMap::noteName (ls.midiNote), noteBox, juce::Justification::centred, false);
 
+    // How much this element's velocity is allowed to move. Drag it.
+    auto dynBox = juce::Rectangle<int> (kDynX, row.getY() + row.getHeight() / 2 - 9, kDynW, 18);
+    const int dynPercent = (int) std::lround (ls.dynamics * 100.0f);
+
+    g.setColour (Colours::panelLight);
+    g.fillRoundedRectangle (dynBox.toFloat(), 3.0f);
+
+    // A fill that tracks the value, so the dynamic character of the whole kit
+    // is legible as a column without reading a single number.
+    auto fill = dynBox.toFloat().withWidth (dynBox.getWidth() * juce::jlimit (0.0f, 1.0f, ls.dynamics / 2.0f));
+    g.setColour ((dim ? Colours::textDim : Colours::accent).withAlpha (0.28f));
+    g.fillRoundedRectangle (fill, 3.0f);
+
+    g.setColour (Colours::textDim);
+    g.setFont (juce::FontOptions (10.0f));
+    g.drawText (juce::String (dynPercent) + "%", dynBox, juce::Justification::centred, false);
+
     auto badge = [&] (int x, const juce::String& text, bool on, juce::Colour onColour)
     {
         auto b = juce::Rectangle<int> (x, row.getY() + row.getHeight() / 2 - 8, kBtnW, 16);
@@ -220,6 +239,7 @@ StepGrid::Hit StepGrid::hitTest (juce::Point<int> pos) const
         if (pos.x >= kLockX  && pos.x < kLockX  + kBtnW) h.kind = Hit::Lock;
         else if (pos.x >= kReroll && pos.x < kReroll + kBtnW) h.kind = Hit::Reroll;
         else if (pos.x >= kNoteX  && pos.x < kNoteX  + kNoteW) h.kind = Hit::Note;
+        else if (pos.x >= kDynX   && pos.x < kDynX   + kDynW)  h.kind = Hit::Dyn;
         else if (pos.x >= kIconX  && pos.x < kIconX  + kIconW) h.kind = Hit::Icon;
         else h.kind = Hit::Name;
 
@@ -264,6 +284,10 @@ void StepGrid::mouseDown (const juce::MouseEvent& e)
 
         case Hit::Note:
             dragStartNote = kit.lanes[(size_t) h.lane].midiNote;
+            return;
+
+        case Hit::Dyn:
+            dragStartDyn = kit.lanes[(size_t) h.lane].dynamics;
             return;
 
         case Hit::Icon:
@@ -326,6 +350,19 @@ void StepGrid::mouseDrag (const juce::MouseEvent& e)
         juce::DragAndDropContainer::performExternalDragDropOfFiles (
             juce::StringArray (file.getFullPathName()), false, this, nullptr);
 
+        return;
+    }
+
+    if (dragOrigin.kind == Hit::Dyn)
+    {
+        auto& ls = kit.lanes[(size_t) dragOrigin.lane];
+        ls.dynamics = juce::jlimit (0.0f, 2.0f,
+                                    dragStartDyn - (float) e.getDistanceFromDragStartY() / 90.0f);
+
+        // Velocity humanising happens at generate time, so the lane has to be
+        // rebuilt for the new amount to be audible rather than just displayed.
+        proc.generateLane ((LaneId) dragOrigin.lane);
+        repaint();
         return;
     }
 

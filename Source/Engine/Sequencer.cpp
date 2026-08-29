@@ -18,7 +18,6 @@ void Sequencer::prepare (double sampleRate)
 void Sequencer::reset()
 {
     pending.clear();
-    freePpq = 0.0;
     wasPlaying = false;
     playStep.store (-1);
 }
@@ -145,22 +144,6 @@ void Sequencer::process (const Kit& kit, juce::MidiBuffer& midi, int numSamples,
 
     flushPendingOffs (midi, numSamples);
     renderWindow (kit, midi, numSamples, ppqStart, ppqPerSample);
-}
-
-void Sequencer::processFreeRunning (const Kit& kit, juce::MidiBuffer& midi, int numSamples, double bpm)
-{
-    if (numSamples <= 0)
-        return;
-
-    wasPlaying = true;
-
-    const double safeBpm = (bpm > 1.0 && bpm < 999.0) ? bpm : 120.0;
-    const double ppqPerSample = safeBpm / 60.0 / sr;
-
-    flushPendingOffs (midi, numSamples);
-    renderWindow (kit, midi, numSamples, freePpq, ppqPerSample);
-
-    freePpq += numSamples * ppqPerSample;
 }
 
 } // namespace drumid

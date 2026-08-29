@@ -35,9 +35,6 @@ public:
                   double bpm,
                   bool playing);
 
-    /** Free-running clock for the standalone build, where there is no host. */
-    void processFreeRunning (const Kit& kit, juce::MidiBuffer& midi, int numSamples, double bpm);
-
     /** 0-based step under the playhead, for the UI. -1 when stopped. */
     int currentStep() const noexcept { return playStep.load(); }
 
@@ -55,7 +52,6 @@ private:
     void allNotesOff (juce::MidiBuffer& midi, int sampleOffset);
 
     double sr        = 44100.0;
-    double freePpq   = 0.0;
     bool   wasPlaying = false;
 
     std::vector<PendingOff> pending;

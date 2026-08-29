@@ -37,6 +37,7 @@ int NoteMap::noteFor (NoteMapPreset preset, LaneId lane)
         case LaneId::OpenHat:    return 46;  // A#1 open hi-hat
         case LaneId::Shaker:     return 70;  // A#3 shaker
         case LaneId::Percussion: return 63;  // D#3 open high conga
+        case LaneId::Percussion2:return 64;  // E3  low conga
         default:                 return 36 + idx;
     }
 }

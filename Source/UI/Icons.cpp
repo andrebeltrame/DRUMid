@@ -126,6 +126,30 @@ static void drawPercussion (juce::Graphics& g, juce::Rectangle<float> r, juce::C
                    small, small, line);
 }
 
+static void drawCowbell (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
+{
+    // A cowbell: narrower at the top, flared at the mouth. Reads as "the other
+    // hand percussion" without ever being mistaken for the bongos or the tom.
+    const float line = juce::jmax (1.2f, r.getWidth() * 0.095f);
+
+    auto b = r.reduced (r.getWidth() * 0.16f, r.getHeight() * 0.12f);
+    const float topInset = b.getWidth() * 0.17f;
+
+    juce::Path p;
+    p.startNewSubPath (b.getX() + topInset, b.getY());
+    p.lineTo (b.getRight() - topInset, b.getY());
+    p.lineTo (b.getRight(), b.getBottom());
+    p.lineTo (b.getX(), b.getBottom());
+    p.closeSubPath();
+
+    g.setColour (c);
+    g.strokePath (p, juce::PathStrokeType (line, juce::PathStrokeType::mitered,
+                                           juce::PathStrokeType::rounded));
+
+    g.fillRect (b.getX() + topInset * 0.6f, b.getBottom() - line * 0.5f,
+                b.getWidth() - topInset * 1.2f, line);
+}
+
 void Icons::drawLane (juce::Graphics& g, LaneId lane, juce::Rectangle<float> area, juce::Colour c)
 {
     // Keep every glyph on the same square so the column reads as a column.
@@ -141,6 +165,7 @@ void Icons::drawLane (juce::Graphics& g, LaneId lane, juce::Rectangle<float> are
         case LaneId::Shaker:     drawShaker (g, r, c); break;
         case LaneId::Tom:        drawTom (g, r.reduced (r.getWidth() * 0.04f), c); break;
         case LaneId::Percussion: drawPercussion (g, r.reduced (r.getWidth() * 0.04f), c); break;
+        case LaneId::Percussion2:drawCowbell (g, r.reduced (r.getWidth() * 0.04f), c); break;
         default: break;
     }
 }
