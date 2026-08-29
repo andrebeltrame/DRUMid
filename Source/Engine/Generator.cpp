@@ -128,14 +128,134 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
             }
             break;
 
+        case LaneId::Tom:
+        {
+            // A tom is allowed to hit with the kick. Drummers do it constantly,
+            // and three things here depend on it: the tribal tom reinforcing the
+            // downbeat, a fill running straight through the beat, and techno's
+            // rolling 8th tom - half of whose hits land on a kick by definition.
+            //
+            // The one case that genuinely does not work is a long low tom on
+            // every kick in a track where the kick carries the sub. So the rule
+            // is narrow rather than blanket: rolling patterns are left alone,
+            // the bar downbeat is always reinforcement, and only the sub-heavy
+            // genres thin what is left.
+            const int bars = (n / kStepsPerBar) > 0 ? (n / kStepsPerBar) : 1;
+            const float perBar = (float) me.hitCount() / (float) bars;
+
+            const bool rolling = perBar >= 6.0f;
+
+            const bool subHeavyKick = s.genre == Genre::MelodicHouse
+                                   || s.genre == Genre::MelodicTechno
+                                   || s.genre == Genre::Techno;
+
+            auto displaceOrDrop = [&] (int i)
+            {
+                auto& st = me.steps[(size_t) i];
+
+                if (i + 2 < n && ! me.steps[(size_t) (i + 2)].on)
+                {
+                    me.steps[(size_t) (i + 2)] = st;
+                    st.clear();
+                }
+                else
+                {
+                    st.clear();
+                }
+            };
+
+            for (int i = 0; i < n; ++i)
+            {
+                auto& st = me.steps[(size_t) i];
+
+                if (! st.on)
+                    continue;
+
+                // Tom and clap on the same 16th is the one collision that reads
+                // as a mistake rather than as a layer.
+                if (clap.steps[(size_t) i].on && rng.chance (0.75f))
+                {
+                    displaceOrDrop (i);
+                    continue;
+                }
+
+                if (! kick.steps[(size_t) i].on)
+                    continue;
+
+                // Reinforcement, not collision - duck it slightly where the kick
+                // owns the low end, and otherwise let it hit.
+                if (rolling || (i % kStepsPerBar) == 0)
+                {
+                    if (subHeavyKick)
+                        st.velocity *= 0.88f;
+
+                    continue;
+                }
+
+                if (! subHeavyKick)
+                {
+                    st.velocity *= 0.85f;
+                    continue;
+                }
+
+                if (rng.chance (0.7f))
+                    displaceOrDrop (i);
+            }
+
+            break;
+        }
+
+        case LaneId::Percussion:
+            // Two hand-percussion lanes playing the same rhythm is one lane's
+            // worth of groove for two lanes' worth of mud. Percussion generates
+            // after the shaker, so it is the one that moves.
+            {
+                const auto& shaker = kit.patterns[(size_t) LaneId::Shaker];
+
+                if (kit.lanes[(size_t) LaneId::Shaker].enabled
+                    && ! kit.lanes[(size_t) LaneId::Shaker].muted)
+                {
+                    for (int i = 0; i < n; ++i)
+                    {
+                        auto& st = me.steps[(size_t) i];
+
+                        if (! st.on || ! shaker.steps[(size_t) i].on)
+                            continue;
+
+                        if (! rng.chance (0.65f))
+                            continue;
+
+                        if (i + 1 < n && ! me.steps[(size_t) (i + 1)].on
+                            && ! shaker.steps[(size_t) (i + 1)].on)
+                        {
+                            me.steps[(size_t) (i + 1)] = st;
+                            st.clear();
+                        }
+                        else
+                        {
+                            st.clear();
+                        }
+                    }
+                }
+            }
+            [[fallthrough]];
+
         case LaneId::Shaker:
             // Percussion is the voice that should sit *between* the kicks. In
             // organic house that displacement is the whole point; in techno the
             // metal lives in the gaps. Melodic house is more forgiving.
             {
-                const float avoid = (s.genre == Genre::OrganicHouse) ? 0.85f
-                                  : (s.genre == Genre::Techno)       ? 0.7f
-                                                                     : 0.35f;
+                float avoid = 0.35f;
+
+                switch (s.genre)
+                {
+                    case Genre::OrganicHouse:  avoid = 0.85f; break;
+                    case Genre::AfroHouse:     avoid = 0.85f; break;   // the perc IS the track
+                    case Genre::MelodicTechno: avoid = 0.75f; break;
+                    case Genre::Techno:        avoid = 0.70f; break;
+                    case Genre::IndieDance:    avoid = 0.45f; break;   // played, not placed
+                    default:                   avoid = 0.35f; break;
+                }
 
                 for (int i = 0; i < n; ++i)
                 {
@@ -191,7 +311,8 @@ static void applyDensity (LanePattern& p, LaneId lane, const GenSettings& s, Rng
 
     // Fill in when Energy is high, but only on the lanes where extra hits are
     // musical - never on the kick or the clap.
-    if (s.energy > 0.7f && (lane == LaneId::ClosedHat || lane == LaneId::Shaker))
+    if (s.energy > 0.7f && (lane == LaneId::ClosedHat || lane == LaneId::Shaker
+                            || lane == LaneId::Percussion))
     {
         const int extra = 1 + (int) ((s.energy - 0.7f) * 10.0f);
         const auto slots = Generator::euclid (extra * 2, 16, rng.below (4));
@@ -247,7 +368,7 @@ static void applyGroove (LanePattern& p, LaneId lane, const GenSettings& s, Rng&
 
     // Ratchets: 32nd rolls, only on hats and percussion, weighted to the end of
     // the phrase where they read as momentum instead of noise.
-    if (lane == LaneId::ClosedHat || lane == LaneId::Shaker)
+    if (lane == LaneId::ClosedHat || lane == LaneId::Shaker || lane == LaneId::Percussion)
     {
         for (int i = 0; i < n; ++i)
         {
@@ -327,8 +448,19 @@ static void applyFill (Kit& kit, LaneId lane, const GenSettings& s, Rng& rng)
 
     switch (lane)
     {
+        case LaneId::Tom:
+            // The tom fill is the classic end-of-phrase move: a run into the
+            // downbeat rather than scattered hits.
+            if (rng.chance (0.3f + s.complexity * 0.4f))
+                for (int i = n - 4; i < n; ++i)
+                    p.steps[(size_t) i] = Step { true,
+                                                 0.5f + 0.15f * (float) (i - (n - 4)),
+                                                 0.0f, 1.0f, 1 };
+            break;
+
         case LaneId::ClosedHat:
         case LaneId::Shaker:
+        case LaneId::Percussion:
             for (int i = lastBarStart + 12; i < n; ++i)
                 if (rng.chance (0.45f + s.complexity * 0.3f))
                     p.steps[(size_t) i] = Step { true, 0.55f + rng.uni() * 0.35f, 0.0f, 1.0f,
@@ -343,7 +475,7 @@ static void applyFill (Kit& kit, LaneId lane, const GenSettings& s, Rng& rng)
         case LaneId::Kick:
             // Dropping the last kick is the oldest trick in the book and still
             // the most effective way to mark the end of a phrase.
-            if (s.genre != Genre::Techno && rng.chance (0.2f))
+            if (s.genre != Genre::Techno && s.genre != Genre::MelodicTechno && rng.chance (0.2f))
                 p.steps[(size_t) (lastBarStart + 12)].on = false;
             break;
 
@@ -356,7 +488,9 @@ static void applyFill (Kit& kit, LaneId lane, const GenSettings& s, Rng& rng)
     cannot quietly undo them. */
 static void applyGenreGuards (LanePattern& p, LaneId lane, const GenSettings& s)
 {
-    if (s.genre != Genre::Techno || lane != LaneId::ClosedHat)
+    const bool technoFamily = s.genre == Genre::Techno || s.genre == Genre::MelodicTechno;
+
+    if (! technoFamily || lane != LaneId::ClosedHat)
         return;
 
     // The offbeat-only hat is the sound of techno. A continuous 16th pattern is
@@ -369,6 +503,84 @@ static void applyGenreGuards (LanePattern& p, LaneId lane, const GenSettings& s)
 
     for (int i = 0; i < p.numSteps; i += 4)
         p.steps[(size_t) i].clear();
+}
+
+/** Energy has to *distribute* hits, not stack them.
+
+    Without this, every colour lane independently answers "how busy should I be?"
+    and at seven lanes the honest answer from each one adds up to mud. The kick
+    and the clap are the skeleton and are never touched; everything else competes
+    for one shared budget, and the busiest lane gives up its quietest hit first.
+*/
+static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1)
+{
+    static const LaneId colour[] =
+    {
+        LaneId::Tom, LaneId::ClosedHat, LaneId::OpenHat, LaneId::Shaker, LaneId::Percussion
+    };
+
+    const int bars = kit.numSteps / kStepsPerBar;
+    const int budget = (int) ((6.0f + s.energy * 32.0f) * (float) bars);
+
+    auto totalHits = [&]
+    {
+        int t = 0;
+
+        for (auto l : colour)
+            if (kit.lanes[(size_t) l].enabled && ! kit.lanes[(size_t) l].muted)
+                t += kit.patterns[(size_t) l].hitCount();
+
+        return t;
+    };
+
+    // A single-lane reroll only trims itself - it must not quietly rewrite the
+    // lanes the user just decided to keep.
+    for (int guard = 0; totalHits() > budget && guard < 512; ++guard)
+    {
+        int busiest = -1;
+        int busiestCount = 0;
+
+        for (auto l : colour)
+        {
+            const int idx = (int) l;
+
+            if (onlyLane >= 0 && idx != onlyLane)
+                continue;
+
+            if (! kit.lanes[(size_t) idx].enabled || kit.lanes[(size_t) idx].muted
+                || kit.lanes[(size_t) idx].locked)
+                continue;
+
+            const int hits = kit.patterns[(size_t) idx].hitCount();
+
+            if (hits > busiestCount)
+            {
+                busiestCount = hits;
+                busiest = idx;
+            }
+        }
+
+        // Nothing left that we are allowed to thin.
+        if (busiest < 0 || busiestCount <= 2)
+            break;
+
+        auto& p = kit.patterns[(size_t) busiest];
+
+        int quietest = -1;
+        float lowest = 2.0f;
+
+        for (int i = 0; i < p.numSteps; ++i)
+            if (p.steps[(size_t) i].on && p.steps[(size_t) i].velocity < lowest)
+            {
+                lowest = p.steps[(size_t) i].velocity;
+                quietest = i;
+            }
+
+        if (quietest < 0)
+            break;
+
+        p.steps[(size_t) quietest].clear();
+    }
 }
 
 // ============================================================================
@@ -395,6 +607,7 @@ void Generator::generateLane (Kit& kit, LaneId lane, const GenSettings& s, int l
     applyFill (kit, lane, s, rng);
     applyGroove (kit.patterns[(size_t) idx], lane, s, rng);
     applyGenreGuards (kit.patterns[(size_t) idx], lane, s);
+    applyEnergyBudget (kit, s, idx);
 }
 
 void Generator::generate (Kit& kit, const GenSettings& s)
@@ -403,8 +616,13 @@ void Generator::generate (Kit& kit, const GenSettings& s)
     // clap. Changing this order changes the groove, not just the code.
     static const LaneId order[] =
     {
-        LaneId::Kick, LaneId::Clap, LaneId::OpenHat, LaneId::ClosedHat, LaneId::Shaker
+        LaneId::Kick, LaneId::Clap, LaneId::Tom,
+        LaneId::OpenHat, LaneId::ClosedHat,
+        LaneId::Shaker, LaneId::Percussion
     };
+
+    static_assert ((int) LaneId::NumLanes == 7,
+                   "add the new lane to the generation order - order is the groove");
 
     kit.setBars (s.bars);
 
@@ -417,6 +635,8 @@ void Generator::generate (Kit& kit, const GenSettings& s)
 
         generateLane (kit, lane, s, s.seed * 7919 + idx * 104729);
     }
+
+    applyEnergyBudget (kit, s);
 }
 
 } // namespace drummy

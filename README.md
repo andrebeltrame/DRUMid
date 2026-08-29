@@ -15,10 +15,12 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 | | |
 |---|---|
 | Formats | VST3, Standalone (universal binary: arm64 + x86_64) |
-| Lanes | Kick, Clap, Closed Hat, Open Hat, Shaker |
-| Genres | Melodic House, Organic House, Techno |
-| Seed bank | 50 curated patterns |
+| Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion |
+| Genres | Organic House, Afro House, Indie Dance, Melodic House, Melodic Techno, Techno |
+| Seed bank | 137 curated patterns |
 | Pattern length | 1, 2 or 4 bars |
+
+![Afro House](docs/drummy-afro-house.png)
 
 AU is wired up in `CMakeLists.txt` but off by default because it needs a full
 Xcode install (Command Line Tools alone won't build it). With Xcode present:
@@ -64,8 +66,8 @@ its own MIDI track. On the Drum Rack track set `MIDI From` → the Drummy track 
 
 The pattern is only useful if it fires the right pad:
 
-- **GM / Drum Rack** — 36 kick, 39 clap, 42 closed hat, 46 open hat, 70 shaker.
-  Matches Ableton's factory racks.
+- **GM / Drum Rack** — 36 kick, 39 clap, 45 tom, 42 closed hat, 46 open hat,
+  70 shaker, 63 conga. Matches Ableton's factory racks.
 - **Drum Rack 4x4** — C1 upward, chromatic, one pad per lane. For racks laid out
   by pad position.
 - **Custom** — drag any lane's note readout up or down.
@@ -85,9 +87,23 @@ gets repetitive:
    into the gaps between kicks, hard in organic house, not at all in melodic.
    In techno the closed hat is kept off the downbeat, because the offbeat-only
    placement *is* the genre.
+
+   The tom is the interesting one. A tom hitting *with* the kick is normal —
+   the tribal downbeat tom, a fill running through the beat, techno's rolling
+   8th tom whose hits land on kicks by definition. Only a long low tom on every
+   kick, in a genre where the kick carries the sub, actually causes a problem,
+   so the rule is narrow instead of blanket. An earlier blanket version turned
+   techno's rolling tom from 8 hits a bar into 4, which is why there is now a
+   test pinning it.
 3. **Variation** — swing as real micro-timing, humanize, probability on ghost
    notes, 32nd ratchets, bar-to-bar mutation so 2 and 4 bar patterns don't read
    as a 1-bar loop, and end-of-phrase fills.
+
+Energy is a **shared budget across the kit**, not a per-lane setting. Without
+that, every colour lane independently answers "how busy should I be?" and at
+seven lanes the honest answer from each one adds up to mud. Kick and clap are
+the skeleton and are never touched; the rest compete for one budget, and the
+busiest lane gives up its quietest hit first.
 
 Everything is driven by the seed number, so the same seed rebuilds the same kit.
 That is what makes **lock + reroll** work: keep the kick you liked, hit GENERATE,
@@ -120,6 +136,17 @@ and only the unlocked lanes change.
 Step blocks are drawn shifted by their real micro-timing, so swing and humanize
 are visible and not just audible.
 
+## Previews
+
+`docs/` holds a rendered screenshot per genre. They come from the offscreen
+renderer, not a screen capture:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMMY_BUILD_PREVIEW=ON
+cmake --build build --target DrummyPreview -j8
+./build/DrummyPreview_artefacts/Release/DrummyPreview docs
+```
+
 ## Layout
 
 ```
@@ -135,12 +162,19 @@ Source/
     MidiExport.*        kit or single lane to .mid
   UI/
     StepGrid.*          lane headers + step grid
+    Icons.*             vector lane glyphs
     DrummyLookAndFeel.*
+Tools/
+  PreviewRender.cpp     renders the editor to PNG with no window
 ```
 
 ## Not there yet
 
-- More lanes: snare, ghost snare, rim, conga, bongo, tom, ride, crash, tambourine, FX
+- More lanes: snare, ghost snare, rim, ride, crash, tambourine, FX
+- The energy budget has no notion of a genre's *lead voice* — in afro house the
+  hi-hat can currently out-compete the congas for the budget, when the congas
+  should win
+- The shaker and the percussion lane can still land on near-identical rhythms
 - Host-automatable parameters (state saves and recalls, but nothing is automatable yet)
 - Preset browser
 - Pattern-length-per-lane (polymeter)

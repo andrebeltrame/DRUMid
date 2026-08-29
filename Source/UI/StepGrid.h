@@ -31,7 +31,7 @@ public:
     std::function<void()> onEdit;          // any change the processor must publish
     std::function<void()> onNoteEdited;    // lane note changed -> switch to Custom
 
-    static constexpr int headerWidth = 190;
+    static constexpr int headerWidth = 210;
 
 private:
     struct Hit

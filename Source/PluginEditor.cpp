@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include "Engine/MidiExport.h"
+#include "UI/Icons.h"
 
 using namespace drummy;
 using namespace drummy::ui;
@@ -50,11 +51,47 @@ void MidiDragTile::mouseDrag (const juce::MouseEvent&)
 }
 
 // ============================================================================
+//  IconButton
+// ============================================================================
+
+void IconButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
+{
+    getLookAndFeel().drawButtonBackground (g, *this,
+                                           findColour (juce::TextButton::buttonColourId),
+                                           highlighted, down);
+
+    auto b = getLocalBounds().toFloat();
+    const float iconSize = juce::jmin (18.0f, b.getHeight() * 0.5f);
+    const auto colour = findColour (getToggleState() ? juce::TextButton::textColourOnId
+                                                     : juce::TextButton::textColourOffId);
+
+    // Glyph and label are centred together rather than the label being centred
+    // and the glyph hung off the edge.
+    const float textWidth = juce::GlyphArrangement::getStringWidth (
+                                juce::Font (juce::FontOptions (13.0f, juce::Font::bold)), getButtonText());
+    const float gap = 8.0f;
+    const float totalWidth = iconSize + gap + textWidth;
+    const float startX = b.getCentreX() - totalWidth * 0.5f;
+
+    if (painter != nullptr)
+        painter (g, { startX, b.getCentreY() - iconSize * 0.5f, iconSize, iconSize }, colour);
+
+    g.setColour (colour);
+    g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
+    g.drawText (getButtonText(),
+                juce::Rectangle<float> (startX + iconSize + gap, b.getY(), textWidth + 2.0f, b.getHeight()),
+                juce::Justification::centredLeft, false);
+}
+
+// ============================================================================
 //  Editor
 // ============================================================================
 
 DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
-    : AudioProcessorEditor (&p), proc (p), grid (p), kitDrag (p, -1, "DRAG KIT MIDI")
+    : AudioProcessorEditor (&p), proc (p),
+      generateButton ("GENERATE", [] (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour c)
+                                  { Icons::drawDice (g, r, c); }),
+      grid (p), kitDrag (p, -1, "DRAG KIT MIDI")
 {
     setLookAndFeel (&lnf);
 
@@ -77,8 +114,8 @@ DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
     proc.kitChanged.addChangeListener (this);
 
     setResizable (true, true);
-    setResizeLimits (760, 340, 1600, 720);
-    setSize (940, 400);
+    setResizeLimits (780, 420, 1600, 900);
+    setSize (980, 500);
 
     refreshFromProcessor();
     startTimerHz (30);
@@ -135,13 +172,7 @@ void DrummyAudioProcessorEditor::buildControls()
 
         // Each style has its own natural feel, so the swing follows the genre
         // unless you move it yourself afterwards.
-        switch (proc.settings().genre)
-        {
-            case Genre::MelodicHouse: proc.settings().swing = 0.53f; break;
-            case Genre::OrganicHouse: proc.settings().swing = 0.56f; break;
-            case Genre::Techno:       proc.settings().swing = 0.50f; break;
-            default: break;
-        }
+        proc.settings().swing = defaultSwingFor (proc.settings().genre);
 
         swing.setValue (proc.settings().swing, juce::dontSendNotification);
         proc.generateAll (true);

@@ -24,12 +24,14 @@ int NoteMap::noteFor (NoteMapPreset preset, LaneId lane)
     // General MIDI, which is also what Ableton's factory Drum Racks follow.
     switch (lane)
     {
-        case LaneId::Kick:      return 36;  // C1
-        case LaneId::Clap:      return 39;  // D#1
-        case LaneId::ClosedHat: return 42;  // F#1
-        case LaneId::OpenHat:   return 46;  // A#1
-        case LaneId::Shaker:    return 70;  // A#3
-        default:                return 36 + idx;
+        case LaneId::Kick:       return 36;  // C1  bass drum
+        case LaneId::Clap:       return 39;  // D#1 hand clap
+        case LaneId::Tom:        return 45;  // A1  low tom
+        case LaneId::ClosedHat:  return 42;  // F#1 closed hi-hat
+        case LaneId::OpenHat:    return 46;  // A#1 open hi-hat
+        case LaneId::Shaker:     return 70;  // A#3 shaker
+        case LaneId::Percussion: return 63;  // D#3 open high conga
+        default:                 return 36 + idx;
     }
 }
 

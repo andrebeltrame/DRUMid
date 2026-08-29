@@ -76,22 +76,36 @@ int main()
         auto organic = makeKit (Genre::OrganicHouse, 0.55f, 0.55f, 777,   2);
         auto techno  = makeKit (Genre::Techno,       0.75f, 0.50f, 4242,  2);
 
-        dump ("melodic house", melodic);
-        dump ("organic house", organic);
-        dump ("techno",        techno);
+        for (int gi = 0; gi < (int) Genre::NumGenres; ++gi)
+            dump (genreName ((Genre) gi), makeKit ((Genre) gi, 0.6f, 0.5f, 1000 + gi * 37, 2));
+
         std::printf ("\n");
 
-        // Every genre is four-on-the-floor: a kick on each quarter, allowing for
-        // the one the end-of-phrase fill is permitted to drop.
-        for (auto* k : { &melodic, &organic, &techno })
+        // Every genre here is four-on-the-floor, and every genre must have seeds
+        // for every lane - a missing seed would silently produce an empty lane.
+        for (int gi = 0; gi < (int) Genre::NumGenres; ++gi)
         {
+            const auto genre = (Genre) gi;
+            const auto kit = makeKit (genre, 0.6f, 0.5f, 1000 + gi * 37, 2);
+
             int downbeats = 0;
 
-            for (int i = 0; i < k->numSteps; i += 4)
-                if (k->patterns[(size_t) LaneId::Kick].steps[(size_t) i].on)
+            for (int i = 0; i < kit.numSteps; i += 4)
+                if (kit.patterns[(size_t) LaneId::Kick].steps[(size_t) i].on)
                     ++downbeats;
 
-            check (downbeats >= k->numSteps / 4 - 1, "kick lands on the quarters");
+            // The end-of-phrase fill is allowed to drop exactly one.
+            check (downbeats >= kit.numSteps / 4 - 1,
+                   juce::String (genreName (genre)) + ": kick lands on the quarters");
+
+            bool everyLaneHasSeeds = true;
+
+            for (int l = 0; l < kNumLanes; ++l)
+                if (PatternLibrary::eligible (genre, (LaneId) l, 0.6f).empty())
+                    everyLaneHasSeeds = false;
+
+            check (everyLaneHasSeeds,
+                   juce::String (genreName (genre)) + ": every lane has seeds");
         }
 
         // Techno's identity: the closed hat stays off the downbeat.
@@ -120,6 +134,78 @@ int main()
                 { anyDifference = true; break; }
 
         check (anyDifference, "bar 2 differs from bar 1");
+
+        // Energy has to behave like a shared budget: a low setting must produce a
+        // genuinely sparser kit than a high one, across the whole arrangement.
+        {
+            auto countColour = [] (const Kit& k)
+            {
+                int t = 0;
+
+                for (auto l : { LaneId::Tom, LaneId::ClosedHat, LaneId::OpenHat,
+                                LaneId::Shaker, LaneId::Percussion })
+                    t += k.patterns[(size_t) l].hitCount();
+
+                return t;
+            };
+
+            const int sparse = countColour (makeKit (Genre::AfroHouse, 0.15f, 0.4f, 31337, 2));
+            const int busy   = countColour (makeKit (Genre::AfroHouse, 0.95f, 0.4f, 31337, 2));
+
+            std::printf ("       energy 0.15 -> %d colour hits, energy 0.95 -> %d\n", sparse, busy);
+            check (sparse < busy, "Energy scales the whole kit, not each lane alone");
+            check (sparse <= 24, "a low Energy kit actually stays sparse");
+        }
+
+        // The shaker and the percussion must not end up playing the same rhythm.
+        {
+            const auto kit = makeKit (Genre::AfroHouse, 0.7f, 0.5f, 8080, 2);
+            const auto& sh = kit.patterns[(size_t) LaneId::Shaker];
+            const auto& pc = kit.patterns[(size_t) LaneId::Percussion];
+
+            int both = 0, either = 0;
+
+            for (int i = 0; i < kit.numSteps; ++i)
+            {
+                const bool a = sh.steps[(size_t) i].on;
+                const bool b = pc.steps[(size_t) i].on;
+
+                if (a && b) ++both;
+                if (a || b) ++either;
+            }
+
+            const float overlap = either > 0 ? (float) both / (float) either : 0.0f;
+            std::printf ("       shaker/perc overlap: %.0f%%\n", overlap * 100.0f);
+            check (overlap < 0.45f, "shaker and percussion play different rhythms");
+        }
+
+        // A tom has to be allowed to reinforce the kick. The earlier blanket rule
+        // turned techno's rolling 8th tom into an offbeat tom - 8 hits down to 4.
+        {
+            int kitsWithTomOnKick = 0;
+            int busiestTomPerBar = 0;
+
+            for (int t = 0; t < 24; ++t)
+            {
+                const auto afro = makeKit (Genre::AfroHouse, 0.7f, 0.4f, 500 + t, 1);
+                const auto& atom = afro.patterns[(size_t) LaneId::Tom];
+
+                for (int i = 0; i < afro.numSteps; ++i)
+                    if (atom.steps[(size_t) i].on && afro.patterns[(size_t) LaneId::Kick].steps[(size_t) i].on)
+                    { ++kitsWithTomOnKick; break; }
+
+                const auto tech = makeKit (Genre::Techno, 0.85f, 0.3f, 500 + t, 1);
+                busiestTomPerBar = juce::jmax (busiestTomPerBar,
+                                               tech.patterns[(size_t) LaneId::Tom].hitCount());
+            }
+
+            std::printf ("       %d/24 afro kits let the tom reinforce the kick;"
+                         " busiest techno tom: %d hits/bar\n",
+                         kitsWithTomOnKick, busiestTomPerBar);
+
+            check (kitsWithTomOnKick > 0, "a tom may reinforce the kick");
+            check (busiestTomPerBar >= 6, "techno's rolling tom keeps its density");
+        }
 
         // Swing has to be real micro-timing, not a quantised lie.
         float maxMicro = 0.0f;

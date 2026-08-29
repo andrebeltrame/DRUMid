@@ -14,6 +14,12 @@ namespace drummy
 //                      offbeat accent, light swing
 //    - organic house : hand percussion carries the groove - tresillo, son and
 //                      rumba clave, E(5,16)/E(7,16) - clap often only on 4
+//    - afro house    : the percussion IS the track - clave and tresillo congas,
+//                      a rolling shaker, a ghosted 16th ahead of the downbeat
+//    - indie dance   : played-not-programmed - 8th hats with real shuffle,
+//                      ghost snares, offbeat tambourine, broken kicks
+//    - melodic techno: straight and patient - offbeat hat, backbeat with a long
+//                      tail, sparse metallic ticks placed 3-against-4
 //    - techno        : closed hat on the offbeat only ("tsk"), zero swing,
 //                      sparse syncopated metal, 16th ratchet rolls
 // ============================================================================
@@ -87,6 +93,137 @@ static const Seed kSeeds[] =
     { Genre::Techno,       LaneId::Shaker,    "syncopated pair",   "......x.......x.",                 0.0f, 0.8f, 2.0f },
     { Genre::Techno,       LaneId::Shaker,    "16th ride",         "xxxxxxxxxxxxxxxx",                 0.6f, 1.0f, 1.5f },
     { Genre::Techno,       LaneId::Shaker,    "3-against-4",       "x..x..x..x..x...",                 0.4f, 1.0f, 1.5f },
+
+    // ---------------------------------------------------------------- AFRO HOUSE
+    { Genre::AfroHouse,    LaneId::Kick,      "four on the floor", "X...X...X...X...",                 0.0f, 1.0f, 3.0f },
+    { Genre::AfroHouse,    LaneId::Kick,      "ghost pickup",      "X...X...X...X..o",                 0.2f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::Kick,      "breathing",         "X..oX...X..oX...",                 0.4f, 1.0f, 1.5f },
+
+    { Genre::AfroHouse,    LaneId::Clap,      "backbeat",          "....X.......X...",                 0.0f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::Clap,      "only on 4",         "............X...",                 0.0f, 0.7f, 2.0f },
+    { Genre::AfroHouse,    LaneId::Clap,      "ghost 2, hit 4",    "....o.......X...",                 0.2f, 1.0f, 1.5f },
+
+    { Genre::AfroHouse,    LaneId::ClosedHat, "offbeat 8ths",      "..x...x...x...x.",                 0.0f, 0.7f, 2.0f },
+    { Genre::AfroHouse,    LaneId::ClosedHat, "16ths",             "oxoxoxoxoxoxoxox",                 0.3f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::ClosedHat, "hand 16ths",        "oXooxXoooXooxXoo",                 0.4f, 1.0f, 2.0f },
+
+    { Genre::AfroHouse,    LaneId::OpenHat,   "offbeat",           "..X...X...X...X.",                 0.0f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::OpenHat,   "and of 2 and 4",    "......X.......X.",                 0.0f, 0.7f, 1.5f },
+
+    { Genre::AfroHouse,    LaneId::Shaker,    "son clave 3-2",     "X..X..X...X.X...",                 0.0f, 1.0f, 2.5f },
+    { Genre::AfroHouse,    LaneId::Shaker,    "tresillo",          "X..x..X.x..X..x.",                 0.0f, 1.0f, 2.5f },
+    { Genre::AfroHouse,    LaneId::Shaker,    "E(7,16)",           "x..x.x.x..x.x.x.",                 0.2f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::Shaker,    "rolling conga",     "X.xX.xX.xX.xX.x.",                 0.4f, 1.0f, 2.0f },
+    { Genre::AfroHouse,    LaneId::Shaker,    "16th shaker",       "oxoXoxoXoxoXoxoX",                 0.5f, 1.0f, 2.0f },
+
+    // ---------------------------------------------------------------- INDIE DANCE
+    { Genre::IndieDance,   LaneId::Kick,      "four on the floor", "X...X...X...X...",                 0.0f, 1.0f, 3.0f },
+    { Genre::IndieDance,   LaneId::Kick,      "broken",            "X...X.....X.X...",                 0.4f, 1.0f, 1.8f },
+    { Genre::IndieDance,   LaneId::Kick,      "bar-end push",      "X...X...X...X..x",                 0.3f, 1.0f, 1.5f },
+
+    { Genre::IndieDance,   LaneId::Clap,      "backbeat",          "....X.......X...",                 0.0f, 1.0f, 3.0f },
+    { Genre::IndieDance,   LaneId::Clap,      "backbeat + ghosts", "....X...o...X..o",                 0.3f, 1.0f, 2.0f },
+    { Genre::IndieDance,   LaneId::Clap,      "played backbeat",   "....X..o....X.o.",                 0.4f, 1.0f, 1.5f },
+
+    { Genre::IndieDance,   LaneId::ClosedHat, "8ths",              "x.x.x.x.x.x.x.x.",                 0.0f, 1.0f, 2.5f },
+    { Genre::IndieDance,   LaneId::ClosedHat, "16ths",             "xoxoxoxoxoxoxoxo",                 0.4f, 1.0f, 2.0f },
+    { Genre::IndieDance,   LaneId::ClosedHat, "offbeat 8ths",      "..x...x...x...x.",                 0.0f, 0.6f, 1.5f },
+
+    { Genre::IndieDance,   LaneId::OpenHat,   "offbeat",           "..X...X...X...X.",                 0.0f, 1.0f, 2.5f },
+    { Genre::IndieDance,   LaneId::OpenHat,   "and of 2 and 4",    "......X.......X.",                 0.0f, 0.7f, 1.5f },
+
+    { Genre::IndieDance,   LaneId::Shaker,    "offbeat tambourine","..x...x...x...x.",                 0.0f, 1.0f, 2.5f },
+    { Genre::IndieDance,   LaneId::Shaker,    "16ths",             "oxoxoxoxoxoxoxox",                 0.3f, 1.0f, 2.0f },
+    { Genre::IndieDance,   LaneId::Shaker,    "son clave 3-2",     "X..X..X...X.X...",                 0.4f, 1.0f, 1.2f },
+
+    // ---------------------------------------------------------------- MELODIC TECHNO
+    { Genre::MelodicTechno, LaneId::Kick,      "straight four",    "X...X...X...X...",                 0.0f, 1.0f, 4.0f },
+    { Genre::MelodicTechno, LaneId::Kick,      "ghost pickup",     "X...X...X...X..o",                 0.4f, 1.0f, 1.8f },
+
+    { Genre::MelodicTechno, LaneId::Clap,      "backbeat",         "....X.......X...",                 0.0f, 1.0f, 3.0f },
+    { Genre::MelodicTechno, LaneId::Clap,      "on 3 only",        "........X.......",                 0.0f, 0.5f, 1.5f },
+    { Genre::MelodicTechno, LaneId::Clap,      "backbeat + ghost", "....X.......X..o",                 0.5f, 1.0f, 1.2f },
+
+    { Genre::MelodicTechno, LaneId::ClosedHat, "offbeat 8ths",    "..X...X...X...X.",                 0.0f, 1.0f, 2.5f },
+    { Genre::MelodicTechno, LaneId::ClosedHat, "16ths offbeat acc","xoXoxoXoxoXoxoXo",                 0.4f, 1.0f, 2.5f },
+    { Genre::MelodicTechno, LaneId::ClosedHat, "16ths accent 4",   "XoooxoooXoooxooo",                 0.5f, 1.0f, 1.5f },
+
+    { Genre::MelodicTechno, LaneId::OpenHat,   "offbeat",         "..X...X...X...X.",                 0.2f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::OpenHat,   "bar lift",        "..............X.",                 0.0f, 0.8f, 2.0f },
+    { Genre::MelodicTechno, LaneId::OpenHat,   "and of 2 and 4",  "......X.......X.",                 0.0f, 0.7f, 1.5f },
+
+    { Genre::MelodicTechno, LaneId::Shaker,    "sparse metal",    "...x......x.....",                 0.0f, 0.8f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Shaker,    "3-against-4",     "x..x..x..x..x...",                 0.2f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Shaker,    "tick pairs",      "..x.x.....x.x...",                 0.3f, 1.0f, 1.8f },
+    { Genre::MelodicTechno, LaneId::Shaker,    "16ths",           "oxoxoxoxoxoxoxox",                 0.7f, 1.0f, 1.2f },
+
+    // ============================================================================
+    //  TOM
+    //
+    //  The tom is a colour, not a timekeeper - one or two placed hits per bar in
+    //  most of these styles. Techno is the exception, where the rolling 8th tom
+    //  is a groove in its own right, and afro house, where it answers the conga.
+    // ============================================================================
+    { Genre::OrganicHouse,  LaneId::Tom, "answer on the and", "......x.........",                 0.0f, 1.0f, 2.5f },
+    { Genre::OrganicHouse,  LaneId::Tom, "3-against-4",       "x.....x.....x...",                 0.3f, 1.0f, 2.0f },
+    { Genre::OrganicHouse,  LaneId::Tom, "tribal pair",       "..x.......x.....",                 0.2f, 1.0f, 2.0f },
+    { Genre::OrganicHouse,  LaneId::Tom, "bar tail",          "..............x.",                 0.0f, 0.7f, 1.5f },
+
+    { Genre::AfroHouse,     LaneId::Tom, "djembe answer",     "..x..x....x.....",                 0.0f, 1.0f, 2.5f },
+    { Genre::AfroHouse,     LaneId::Tom, "tribal roll",       "x.xx..x...x.x...",                 0.4f, 1.0f, 2.0f },
+    { Genre::AfroHouse,     LaneId::Tom, "tresillo low",      "x..x..x.........",                 0.2f, 1.0f, 2.0f },
+    { Genre::AfroHouse,     LaneId::Tom, "sparse accent",     "......x.........",                 0.0f, 0.6f, 1.5f },
+
+    { Genre::IndieDance,    LaneId::Tom, "floor tom offbeat", "......x.......x.",                 0.0f, 1.0f, 2.5f },
+    { Genre::IndieDance,    LaneId::Tom, "live fill",         "....x..x....x..x",                 0.4f, 1.0f, 2.0f },
+    { Genre::IndieDance,    LaneId::Tom, "single accent",     "..........x.....",                 0.0f, 0.7f, 1.5f },
+
+    { Genre::MelodicHouse,  LaneId::Tom, "one per bar",       "..........x.....",                 0.0f, 0.8f, 2.5f },
+    { Genre::MelodicHouse,  LaneId::Tom, "bar tail",          "..............x.",                 0.0f, 1.0f, 2.0f },
+    { Genre::MelodicHouse,  LaneId::Tom, "answer pair",       "......x...x.....",                 0.4f, 1.0f, 1.5f },
+
+    { Genre::MelodicTechno, LaneId::Tom, "deep single",       "........x.......",                 0.0f, 1.0f, 2.5f },
+    { Genre::MelodicTechno, LaneId::Tom, "half-bar pulse",    "x.......x.......",                 0.3f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Tom, "bar tail",          "..............x.",                 0.0f, 0.8f, 1.5f },
+
+    { Genre::Techno,        LaneId::Tom, "rolling 8ths",      "x.x.x.x.x.x.x.x.",                 0.5f, 1.0f, 2.0f },
+    { Genre::Techno,        LaneId::Tom, "backbeat answer",   "....x.......x...",                 0.0f, 1.0f, 2.0f },
+    { Genre::Techno,        LaneId::Tom, "sparse hit",        "..........x.....",                 0.0f, 0.7f, 2.0f },
+
+    // ============================================================================
+    //  PERCUSSION  (congas, bongos, rim, metal)
+    //
+    //  In organic and afro house this lane is the lead voice, so it gets the full
+    //  clave and tumbao vocabulary. In the techno family it is one or two
+    //  metallic ticks placed against the grid.
+    // ============================================================================
+    { Genre::OrganicHouse,  LaneId::Percussion, "tumbao",          "..x.x..x..x.x..x",         0.3f, 1.0f, 2.5f },
+    { Genre::OrganicHouse,  LaneId::Percussion, "son clave 3-2",   "X..X..X...X.X...",         0.0f, 1.0f, 2.5f },
+    { Genre::OrganicHouse,  LaneId::Percussion, "rumba clave 3-2", "X..X...X..X.X...",         0.0f, 1.0f, 2.2f },
+    { Genre::OrganicHouse,  LaneId::Percussion, "tresillo",        "X..x..X.........",         0.0f, 0.8f, 2.0f },
+    { Genre::OrganicHouse,  LaneId::Percussion, "conga answer",    "...x..x...x..x..",         0.2f, 1.0f, 2.0f },
+
+    { Genre::AfroHouse,     LaneId::Percussion, "rolling conga",   "X.xX.xX.xX.xX.x.",         0.3f, 1.0f, 2.5f },
+    { Genre::AfroHouse,     LaneId::Percussion, "tumbao",          "..x.x..x..x.x..x",         0.2f, 1.0f, 2.5f },
+    { Genre::AfroHouse,     LaneId::Percussion, "son clave 3-2",   "X..X..X...X.X...",         0.0f, 1.0f, 2.2f },
+    { Genre::AfroHouse,     LaneId::Percussion, "E(7,16) bongo",   "x..x.x.x..x.x.x.",         0.2f, 1.0f, 2.2f },
+    { Genre::AfroHouse,     LaneId::Percussion, "cascara",         "x.xx.x.xx.xx.x.x",         0.5f, 1.0f, 1.8f },
+
+    { Genre::IndieDance,    LaneId::Percussion, "cowbell offbeat", "..x...x...x...x.",         0.0f, 1.0f, 2.5f },
+    { Genre::IndieDance,    LaneId::Percussion, "rim answer",      "....x.......x..x",         0.3f, 1.0f, 2.0f },
+    { Genre::IndieDance,    LaneId::Percussion, "clave",           "X..X..X...X.X...",         0.2f, 1.0f, 1.8f },
+
+    { Genre::MelodicHouse,  LaneId::Percussion, "offbeat conga",   "..x...x...x...x.",         0.0f, 1.0f, 2.2f },
+    { Genre::MelodicHouse,  LaneId::Percussion, "16th answer",     "...x..x......x..",         0.3f, 1.0f, 2.0f },
+    { Genre::MelodicHouse,  LaneId::Percussion, "tresillo",        "X..x..x.........",         0.0f, 0.8f, 1.8f },
+
+    { Genre::MelodicTechno, LaneId::Percussion, "metal tick",      "...x......x.....",         0.0f, 1.0f, 2.5f },
+    { Genre::MelodicTechno, LaneId::Percussion, "3-against-4",     "x..x..x..x..x...",         0.3f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Percussion, "tick pairs",      "..x.x.....x.x...",         0.3f, 1.0f, 1.8f },
+
+    { Genre::Techno,        LaneId::Percussion, "sparse metal",    "......x.........",         0.0f, 1.0f, 2.5f },
+    { Genre::Techno,        LaneId::Percussion, "syncopated pair", "...x........x...",         0.0f, 1.0f, 2.2f },
+    { Genre::Techno,        LaneId::Percussion, "3-against-4",     "x..x..x..x..x...",         0.4f, 1.0f, 1.8f },
 };
 
 static constexpr int kNumSeeds = (int) (sizeof (kSeeds) / sizeof (kSeeds[0]));

@@ -53,6 +53,7 @@ target_sources(Drummy PRIVATE
     Source/Engine/Sequencer.cpp
     Source/Engine/MidiExport.cpp
     Source/UI/StepGrid.cpp
+    Source/UI/Icons.cpp
     Source/UI/DrummyLookAndFeel.cpp
 )
 
@@ -103,6 +104,35 @@ if (DRUMMY_BUILD_TESTS)
     target_link_libraries(DrummyTests PRIVATE
         juce::juce_audio_basics
         juce::juce_core
+        juce::juce_recommended_config_flags
+    )
+endif()
+
+# ---------------------------------------------------------------------------
+#  Renders the editor to PNG without opening a window - useful for reviewing
+#  the UI over a terminal, and for README screenshots.
+#    cmake -B build -DDRUMMY_BUILD_PREVIEW=ON
+#    cmake --build build --target DrummyPreview
+# ---------------------------------------------------------------------------
+option(DRUMMY_BUILD_PREVIEW "Build the offscreen UI preview renderer" OFF)
+
+if (DRUMMY_BUILD_PREVIEW)
+    juce_add_console_app(DrummyPreview PRODUCT_NAME "DrummyPreview")
+
+    target_sources(DrummyPreview PRIVATE Tools/PreviewRender.cpp)
+    target_include_directories(DrummyPreview PRIVATE Source)
+
+    target_compile_definitions(DrummyPreview PRIVATE
+        JUCE_STANDALONE_APPLICATION=1
+        JUCE_MODAL_LOOPS_PERMITTED=1
+    )
+
+    # The plugin target links its JUCE modules PRIVATE, so the preview has to
+    # ask for the headers itself.
+    target_link_libraries(DrummyPreview PRIVATE
+        Drummy
+        juce::juce_audio_utils
+        juce::juce_dsp
         juce::juce_recommended_config_flags
     )
 endif()

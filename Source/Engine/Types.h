@@ -10,10 +10,15 @@ static constexpr int kStepsPerBar = 16;   // 16th-note grid
 static constexpr int kMaxBars     = 4;
 static constexpr int kMaxSteps    = kStepsPerBar * kMaxBars;
 
+/** Ordered as an energy gradient, loosest to hardest, so scrolling the selector
+    is itself a musical move. */
 enum class Genre
 {
-    MelodicHouse = 0,
-    OrganicHouse,
+    OrganicHouse = 0,
+    AfroHouse,
+    IndieDance,
+    MelodicHouse,
+    MelodicTechno,
     Techno,
     NumGenres
 };
@@ -24,9 +29,11 @@ enum class LaneId
 {
     Kick = 0,
     Clap,
+    Tom,
     ClosedHat,
     OpenHat,
     Shaker,
+    Percussion,
     NumLanes
 };
 
@@ -36,12 +43,14 @@ inline const char* laneName (LaneId l) noexcept
 {
     switch (l)
     {
-        case LaneId::Kick:      return "Kick";
-        case LaneId::Clap:      return "Clap";
-        case LaneId::ClosedHat: return "Closed Hat";
-        case LaneId::OpenHat:   return "Open Hat";
-        case LaneId::Shaker:    return "Shaker";
-        default:                return "?";
+        case LaneId::Kick:       return "Kick";
+        case LaneId::Clap:       return "Clap";
+        case LaneId::Tom:        return "Tom";
+        case LaneId::ClosedHat:  return "Closed Hat";
+        case LaneId::OpenHat:    return "Open Hat";
+        case LaneId::Shaker:     return "Shaker";
+        case LaneId::Percussion: return "Percussion";
+        default:                 return "?";
     }
 }
 
@@ -49,10 +58,13 @@ inline const char* genreName (Genre g) noexcept
 {
     switch (g)
     {
-        case Genre::MelodicHouse: return "Melodic House";
-        case Genre::OrganicHouse: return "Organic House";
-        case Genre::Techno:       return "Techno";
-        default:                  return "?";
+        case Genre::OrganicHouse:  return "Organic House";
+        case Genre::AfroHouse:     return "Afro House";
+        case Genre::IndieDance:    return "Indie Dance";
+        case Genre::MelodicHouse:  return "Melodic House";
+        case Genre::MelodicTechno: return "Melodic Techno";
+        case Genre::Techno:        return "Techno";
+        default:                   return "?";
     }
 }
 
@@ -120,6 +132,22 @@ struct Kit
 };
 
 /** The knobs the generator reads. */
+/** The swing each style sits at naturally. Techno is dead straight; organic
+    house and afro house live on a much heavier shuffle. */
+inline float defaultSwingFor (Genre g) noexcept
+{
+    switch (g)
+    {
+        case Genre::OrganicHouse:  return 0.56f;
+        case Genre::AfroHouse:     return 0.56f;
+        case Genre::IndieDance:    return 0.57f;
+        case Genre::MelodicHouse:  return 0.53f;
+        case Genre::MelodicTechno: return 0.51f;
+        case Genre::Techno:        return 0.50f;
+        default:                   return 0.52f;
+    }
+}
+
 struct GenSettings
 {
     Genre genre       = Genre::MelodicHouse;

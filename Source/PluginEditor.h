@@ -28,6 +28,21 @@ private:
     bool hover = false;
 };
 
+/** A TextButton that carries a glyph next to its label. */
+class IconButton : public juce::TextButton
+{
+public:
+    using Painter = std::function<void (juce::Graphics&, juce::Rectangle<float>, juce::Colour)>;
+
+    IconButton (const juce::String& text, Painter p)
+        : juce::TextButton (text), painter (std::move (p)) {}
+
+    void paintButton (juce::Graphics&, bool highlighted, bool down) override;
+
+private:
+    Painter painter;
+};
+
 class DrummyAudioProcessorEditor : public juce::AudioProcessorEditor,
                                    private juce::Timer,
                                    private juce::ChangeListener
@@ -53,7 +68,7 @@ private:
 
     juce::Label       titleLabel, seedLabel, hintLabel;
     juce::ComboBox    genreBox, barsBox, noteMapBox;
-    juce::TextButton  generateButton { "GENERATE" };
+    IconButton        generateButton;
     juce::TextButton  playButton { "PLAY" };
     juce::ToggleButton fillsButton { "Fills" };
 

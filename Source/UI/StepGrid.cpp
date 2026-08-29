@@ -1,15 +1,20 @@
 #include "StepGrid.h"
 #include "../Engine/NoteMap.h"
+#include "Icons.h"
 
 namespace drummy::ui
 {
 
-static constexpr int kLockX   = 136;
-static constexpr int kMuteX   = 154;
-static constexpr int kReroll  = 172;
-static constexpr int kBtnW    = 16;
-static constexpr int kNoteX   = 98;
+static constexpr int kIconX   = 8;
+static constexpr int kIconW   = 20;
+static constexpr int kNameX   = 34;
+static constexpr int kNameW   = 82;
+static constexpr int kNoteX   = 118;
 static constexpr int kNoteW   = 34;
+static constexpr int kLockX   = 156;
+static constexpr int kMuteX   = 174;
+static constexpr int kReroll  = 192;
+static constexpr int kBtnW    = 16;
 
 StepGrid::StepGrid (DrummyAudioProcessor& p) : proc (p)
 {
@@ -65,6 +70,12 @@ void StepGrid::paint (juce::Graphics& g)
             g.fillRect (row);
         }
 
+        if (lane > 0)
+        {
+            g.setColour (Colours::outline.withAlpha (0.5f));
+            g.fillRect (row.getX(), row.getY(), row.getWidth(), 1);
+        }
+
         drawHeader (g, lane, row);
 
         for (int s = 0; s < steps; ++s)
@@ -96,9 +107,15 @@ void StepGrid::drawHeader (juce::Graphics& g, int lane, juce::Rectangle<int> row
 
     const bool dim = ! ls.enabled || ls.muted;
 
+    Icons::drawLane (g, id,
+                     juce::Rectangle<float> ((float) kIconX,
+                                             (float) row.getY() + (float) row.getHeight() * 0.5f - (float) kIconW * 0.5f,
+                                             (float) kIconW, (float) kIconW),
+                     dim ? Colours::textDim : Colours::accent);
+
     g.setColour (dim ? Colours::textDim : Colours::text);
     g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
-    g.drawText (laneName (id), row.getX() + 8, row.getY(), 86, row.getHeight(),
+    g.drawText (laneName (id), kNameX, row.getY(), kNameW, row.getHeight(),
                 juce::Justification::centredLeft, true);
 
     // note pad
@@ -139,10 +156,13 @@ void StepGrid::drawCell (juce::Graphics& g, int lane, int step)
         return;
 
     // Micro-timing shifts the block visibly, so swing and humanize are something
-    // you can see and not just hear.
-    const float shift = st.micro * b.getWidth();
-    auto hit = b.reduced (1.0f).translated (juce::jlimit (-b.getWidth() * 0.45f,
-                                                          b.getWidth() * 0.45f, shift), 0.0f);
+    // you can see and not just hear. The shift is capped well short of the cell
+    // edge - past that the blocks merge with their neighbours and the grid stops
+    // being readable, which costs more than the extra precision is worth.
+    const float shift = juce::jlimit (-b.getWidth() * 0.28f, b.getWidth() * 0.28f,
+                                      st.micro * b.getWidth());
+
+    auto hit = b.reduced (1.0f).translated (shift, 0.0f);
 
     const float vel = juce::jlimit (0.0f, 1.0f, st.velocity);
     const bool dim = ! ls.enabled || ls.muted;
@@ -150,9 +170,16 @@ void StepGrid::drawCell (juce::Graphics& g, int lane, int step)
     auto colour = (vel < 0.5f ? Colours::accentSoft : Colours::accent)
                       .withMultipliedAlpha (dim ? 0.35f : 1.0f);
 
-    // Height encodes velocity - the accent pattern is readable at a glance.
-    const float h = hit.getHeight() * juce::jmap (vel, 0.0f, 1.0f, 0.35f, 1.0f);
+    // Height encodes velocity so the accent pattern reads at a glance, over a
+    // narrow enough range that ghosts stay obviously present rather than
+    // looking like empty steps.
+    const float h = hit.getHeight() * juce::jmap (vel, 0.0f, 1.0f, 0.5f, 1.0f);
     auto bar = hit.withHeight (h).withY (hit.getBottom() - h);
+
+    // A dim full-height footprint keeps the step's own slot visible even when
+    // the velocity block is short and shifted.
+    g.setColour (colour.withAlpha (0.16f));
+    g.fillRoundedRectangle (hit, 2.0f);
 
     g.setColour (colour);
     g.fillRoundedRectangle (bar, 2.0f);
@@ -170,8 +197,8 @@ void StepGrid::drawCell (juce::Graphics& g, int lane, int step)
 
     if (st.probability < 0.999f)
     {
-        g.setColour (Colours::text.withAlpha (0.55f));
-        g.drawRoundedRectangle (hit.reduced (0.5f), 2.0f, 1.0f);
+        g.setColour (Colours::text.withAlpha (0.5f));
+        g.drawRoundedRectangle (bar.reduced (0.5f), 2.0f, 1.0f);
     }
 }
 
