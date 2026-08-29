@@ -41,7 +41,12 @@ void MidiDragTile::mouseDrag (const juce::MouseEvent&)
          << (lane < 0 ? juce::String ("kit") : juce::String (laneName ((LaneId) lane)))
          << "_" << proc.settings().seed;
 
-    auto file = MidiExport::writeTempFile (kit, name, lane);
+    // The kit drag has to know which workflow it is serving. Under the
+    // single-note map a flat export would stack all seven lanes on C3, so it
+    // writes one track per lane instead - dropped into Session View, Ableton
+    // makes a track per instrument.
+    auto file = lane < 0 ? MidiExport::writeKitTempFile (kit, name)
+                         : MidiExport::writeTempFile (kit, name, lane);
 
     if (file == juce::File())
         return;
@@ -152,7 +157,8 @@ void DrummyAudioProcessorEditor::buildControls()
     titleLabel.setColour (juce::Label::textColourId, Colours::accent);
     addAndMakeVisible (titleLabel);
 
-    hintLabel.setText ("click a lane name to disable  -  L lock  -  M mute  -  R reroll  -  alt+drag a step for velocity  -  double click for ratchet",
+    hintLabel.setText ("click a lane name to disable  -  drag its icon to export that lane  -  "
+                       "L lock  -  R reroll  -  alt+drag a step for velocity  -  double click for ratchet",
                        juce::dontSendNotification);
     hintLabel.setFont (juce::FontOptions (10.5f));
     hintLabel.setColour (juce::Label::textColourId, Colours::textDim);

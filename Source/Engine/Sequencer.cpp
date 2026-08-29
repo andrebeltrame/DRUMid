@@ -78,7 +78,7 @@ void Sequencer::renderWindow (const Kit& kit, juce::MidiBuffer& midi, int numSam
         {
             const auto& ls = kit.lanes[(size_t) laneIdx];
 
-            if (! ls.enabled || ls.muted)
+            if (! ls.enabled)
                 continue;
 
             const auto& pat = kit.patterns[(size_t) laneIdx];

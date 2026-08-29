@@ -13,7 +13,12 @@ namespace drummy::ui
       click / drag      paint steps on and off
       alt + drag up     raise velocity, alt + drag down lower it
       double click      cycle the ratchet (1 -> 2 -> 3 -> 1)
+      drag the icon     export that lane alone as MIDI
       drag the note     retune the lane, which switches the map to Custom
+
+    There is no mute. Every lane here drives its own instrument, so disabling a
+    lane is the only switch that means anything - a muted-but-still-generated
+    lane is just a lane you forgot to turn back on.
 */
 class StepGrid : public juce::Component
 {
@@ -36,7 +41,7 @@ public:
 private:
     struct Hit
     {
-        enum Kind { None, Cell, Lock, Mute, Reroll, Note, Name } kind = None;
+        enum Kind { None, Cell, Lock, Reroll, Note, Name, Icon } kind = None;
         int lane = -1;
         int step = -1;
     };

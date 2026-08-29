@@ -20,7 +20,7 @@ juce::MidiMessageSequence MidiExport::toSequence (const Kit& kit, int laneFilter
 
         const auto& ls = kit.lanes[(size_t) laneIdx];
 
-        if (! ls.enabled || ls.muted)
+        if (! ls.enabled)
             continue;
 
         const auto& pat = kit.patterns[(size_t) laneIdx];
@@ -57,6 +57,81 @@ juce::MidiMessageSequence MidiExport::toSequence (const Kit& kit, int laneFilter
     return seq;
 }
 
+bool MidiExport::lanesShareNotes (const Kit& kit)
+{
+    for (int a = 0; a < kNumLanes; ++a)
+    {
+        if (! kit.lanes[(size_t) a].enabled)
+            continue;
+
+        for (int b = a + 1; b < kNumLanes; ++b)
+            if (kit.lanes[(size_t) b].enabled
+                && kit.lanes[(size_t) a].midiNote == kit.lanes[(size_t) b].midiNote)
+                return true;
+    }
+
+    return false;
+}
+
+static juce::File writeMidiFile (const juce::MidiFile& file, const juce::String& baseName)
+{
+    auto out = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                   .getChildFile ("Drummy")
+                   .getChildFile (juce::File::createLegalFileName (baseName) + ".mid");
+
+    out.getParentDirectory().createDirectory();
+    out.deleteFile();
+
+    if (auto stream = out.createOutputStream())
+    {
+        file.writeTo (*stream);
+        stream->flush();
+        return out;
+    }
+
+    return {};
+}
+
+juce::File MidiExport::writeMultiTrackTempFile (const Kit& kit, const juce::String& baseName)
+{
+    juce::MidiFile file;
+    file.setTicksPerQuarterNote (kTicksPerQuarter);
+
+    const double endTick = juce::jlimit (1, kMaxSteps, kit.numSteps) * kTicksPerStep;
+    int tracksWritten = 0;
+
+    for (int l = 0; l < kNumLanes; ++l)
+    {
+        if (! kit.lanes[(size_t) l].enabled)
+            continue;
+
+        auto seq = toSequence (kit, l);
+
+        if (seq.getNumEvents() == 0)
+            continue;
+
+        // Naming the track is what makes Ableton label the created tracks
+        // "Kick", "Clap" and so on instead of "1-MIDI", "2-MIDI".
+        seq.addEvent (juce::MidiMessage::textMetaEvent (3, laneName ((LaneId) l)), 0.0);
+        seq.addEvent (juce::MidiMessage::endOfTrack(), endTick);
+        seq.sort();
+
+        file.addTrack (seq);
+        ++tracksWritten;
+    }
+
+    if (tracksWritten == 0)
+        return {};
+
+    return writeMidiFile (file, baseName);
+}
+
+juce::File MidiExport::writeKitTempFile (const Kit& kit, const juce::String& baseName)
+{
+    return lanesShareNotes (kit) ? writeMultiTrackTempFile (kit, baseName)
+                                 : writeTempFile (kit, baseName, -1);
+}
+
 juce::File MidiExport::writeTempFile (const Kit& kit, const juce::String& baseName, int laneFilter)
 {
     auto seq = toSequence (kit, laneFilter);
@@ -74,21 +149,7 @@ juce::File MidiExport::writeTempFile (const Kit& kit, const juce::String& baseNa
 
     file.addTrack (seq);
 
-    auto out = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                   .getChildFile ("Drummy")
-                   .getChildFile (juce::File::createLegalFileName (baseName) + ".mid");
-
-    out.getParentDirectory().createDirectory();
-    out.deleteFile();
-
-    if (auto stream = out.createOutputStream())
-    {
-        file.writeTo (*stream);
-        stream->flush();
-        return out;
-    }
-
-    return {};
+    return writeMidiFile (file, baseName);
 }
 
 } // namespace drummy

@@ -77,7 +77,7 @@ private:
 
     drummy::Kit         editKit;
     drummy::GenSettings gen;
-    drummy::NoteMapPreset notePreset = drummy::NoteMapPreset::GeneralMidi;
+    drummy::NoteMapPreset notePreset = drummy::NoteMapPreset::SingleNoteC3;
 
     std::array<drummy::Kit, 2> audioKits;
     std::atomic<int> activeKit { 0 };

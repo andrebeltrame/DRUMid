@@ -54,9 +54,17 @@ every hit on the right pad at exactly the right clip length.
 
 ## Using it in Ableton
 
-**To commit a pattern to a clip (the main workflow):** drag `DRAG KIT MIDI`
-straight into a clip slot. Every enabled lane comes across on its mapped note,
-with swing and humanize baked into the timing — what you drag is what you heard.
+**One instrument per track (the default workflow):** every lane sits on C3, and
+dragging `DRAG KIT MIDI` into the Session View writes one MIDI track per lane —
+Ableton creates a track per instrument, already named Kick, Clap, Tom and so on.
+Drag a single lane's **icon** to export just that lane.
+
+**Driving a Drum Rack instead:** switch the map to GM / Drum Rack. Now each lane
+has its own note and the kit drag writes one track, so it lands as a single clip
+that plays the whole rack.
+
+Either way, swing and humanize are baked into the exported timing — what you
+drag is what you heard.
 
 **To audition live:** Drummy is an instrument that outputs MIDI, so it goes on
 its own MIDI track. On the Drum Rack track set `MIDI From` → the Drummy track →
@@ -64,8 +72,18 @@ its own MIDI track. On the Drum Rack track set `MIDI From` → the Drummy track 
 
 ## Note mapping
 
-The pattern is only useful if it fires the right pad:
+Two workflows, two answers.
 
+Driving **one Simpler per track**, the routing separates the instruments and the
+note carries no information — so every lane sits on the same note and the export
+splits by track instead. That is the default.
+
+Driving a **Drum Rack**, the note *is* what separates the instruments, and the
+pattern is only useful if it fires the right pad.
+
+- **Single note (C3)** *(default)* — every lane on note 60, the root Simpler and
+  Sampler default to. The kit drag automatically becomes one track per lane,
+  because a flat export would stack all seven on one voice.
 - **GM / Drum Rack** — 36 kick, 39 clap, 45 tom, 42 closed hat, 46 open hat,
   70 shaker, 63 conga. Matches Ableton's factory racks.
 - **Drum Rack 4x4** — C1 upward, chromatic, one pad per lane. For racks laid out
@@ -128,10 +146,14 @@ and only the unlocked lanes change.
 | alt + drag | velocity |
 | double click | cycle ratchet (1 → 2 → 3) |
 | lane name | enable / disable the lane |
+| drag the lane icon | export that lane alone as MIDI |
 | `L` | lock — GENERATE will not touch this lane |
-| `M` | mute |
 | `R` | reroll just this lane |
 | drag the note | retune the lane (switches the map to Custom) |
+
+There is no mute or solo. Every lane drives its own instrument, so enable/disable
+is the only switch that means anything here — a muted-but-still-generated lane is
+just a lane you forgot to turn back on.
 
 Step blocks are drawn shifted by their real micro-timing, so swing and humanize
 are visible and not just audible.

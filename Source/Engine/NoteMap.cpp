@@ -7,6 +7,7 @@ const char* NoteMap::presetName (NoteMapPreset p)
 {
     switch (p)
     {
+        case NoteMapPreset::SingleNoteC3: return "Single note (C3)";
         case NoteMapPreset::GeneralMidi: return "GM / Drum Rack";
         case NoteMapPreset::DrumRack4x4: return "Drum Rack 4x4";
         case NoteMapPreset::Custom:      return "Custom";
@@ -17,6 +18,11 @@ const char* NoteMap::presetName (NoteMapPreset p)
 int NoteMap::noteFor (NoteMapPreset preset, LaneId lane)
 {
     const int idx = (int) lane;
+
+    // One instrument per track: the note is just a trigger, so it is the same
+    // one everywhere - C3, which is where Simpler and Sampler put their root.
+    if (preset == NoteMapPreset::SingleNoteC3)
+        return 60;
 
     if (preset == NoteMapPreset::DrumRack4x4)
         return 36 + idx;   // C1 upward, one pad per lane

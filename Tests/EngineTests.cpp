@@ -277,7 +277,7 @@ int main()
 
             for (int l = 0; l < kNumLanes; ++l)
             {
-                if (! kit.lanes[(size_t) l].enabled || kit.lanes[(size_t) l].muted)
+                if (! kit.lanes[(size_t) l].enabled)
                     continue;
 
                 for (int i = 0; i < kit.numSteps; ++i)
@@ -315,6 +315,72 @@ int main()
             }
 
             check (notesInMap, "every note lands on a mapped pad");
+        }
+
+        // The single-note workflow: everything on C3, so a flat export would
+        // collapse the kit onto one voice and the kit drag has to go multi-track.
+        {
+            auto single = makeKit (Genre::AfroHouse, 0.6f, 0.5f, 4711, 2);
+            NoteMap::apply (single, NoteMapPreset::SingleNoteC3);
+
+            bool allOnC3 = true;
+
+            for (int l = 0; l < kNumLanes; ++l)
+                if (single.lanes[(size_t) l].midiNote != 60)
+                    allOnC3 = false;
+
+            check (allOnC3, "the single-note map puts every lane on C3 (60)");
+            check (NoteMap::noteName (60) == "C3", "note 60 is named C3");
+            check (MidiExport::lanesShareNotes (single), "shared notes are detected");
+
+            auto multi = MidiExport::writeKitTempFile (single, "DrummyTest_single");
+            juce::FileInputStream in3 (multi);
+            juce::MidiFile readMulti;
+            readMulti.readFrom (in3);
+
+            int enabledLanes = 0;
+
+            for (int l = 0; l < kNumLanes; ++l)
+                if (single.lanes[(size_t) l].enabled
+                    && single.patterns[(size_t) l].hitCount() > 0)
+                    ++enabledLanes;
+
+            std::printf ("       single-note kit drag wrote %d tracks for %d lanes\n",
+                         readMulti.getNumTracks(), enabledLanes);
+
+            check (readMulti.getNumTracks() == enabledLanes,
+                   "the kit drag becomes one track per lane");
+
+            // Named tracks are what make Ableton label them Kick, Clap, Tom...
+            bool named = readMulti.getNumTracks() > 0;
+
+            for (int t = 0; t < readMulti.getNumTracks(); ++t)
+            {
+                bool hasName = false;
+
+                for (int i = 0; i < readMulti.getTrack (t)->getNumEvents(); ++i)
+                    if (readMulti.getTrack (t)->getEventPointer (i)->message.isTrackNameEvent())
+                        hasName = true;
+
+                if (! hasName)
+                    named = false;
+            }
+
+            check (named, "every exported track carries its lane's name");
+
+            // The GM map keeps the flat single-track export.
+            auto gm = makeKit (Genre::AfroHouse, 0.6f, 0.5f, 4711, 2);
+            NoteMap::apply (gm, NoteMapPreset::GeneralMidi);
+            check (! MidiExport::lanesShareNotes (gm), "the GM map keeps lanes on distinct notes");
+
+            auto flat = MidiExport::writeKitTempFile (gm, "DrummyTest_gm");
+            juce::FileInputStream in4 (flat);
+            juce::MidiFile readFlat;
+            readFlat.readFrom (in4);
+            check (readFlat.getNumTracks() == 1, "a Drum Rack kit still exports as one track");
+
+            multi.deleteFile();
+            flat.deleteFile();
         }
 
         // Single-lane drag.

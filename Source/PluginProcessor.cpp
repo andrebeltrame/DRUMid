@@ -135,7 +135,6 @@ void DrummyAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
         lane.setProperty ("index", i, nullptr);
         lane.setProperty ("enabled", ls.enabled, nullptr);
         lane.setProperty ("locked", ls.locked, nullptr);
-        lane.setProperty ("muted", ls.muted, nullptr);
         lane.setProperty ("note", ls.midiNote, nullptr);
         lane.setProperty ("gain", ls.gain, nullptr);
 
@@ -198,7 +197,6 @@ void DrummyAudioProcessor::setStateInformation (const void* data, int size)
         auto& ls = editKit.lanes[(size_t) i];
         ls.enabled  = (bool) lane.getProperty ("enabled", true);
         ls.locked   = (bool) lane.getProperty ("locked", false);
-        ls.muted    = (bool) lane.getProperty ("muted", false);
         ls.midiNote = (int)  lane.getProperty ("note", 36);
         ls.gain     = (float) lane.getProperty ("gain", 1.0);
 

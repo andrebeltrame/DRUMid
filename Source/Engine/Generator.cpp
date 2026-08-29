@@ -212,8 +212,7 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
             {
                 const auto& shaker = kit.patterns[(size_t) LaneId::Shaker];
 
-                if (kit.lanes[(size_t) LaneId::Shaker].enabled
-                    && ! kit.lanes[(size_t) LaneId::Shaker].muted)
+                if (kit.lanes[(size_t) LaneId::Shaker].enabled)
                 {
                     for (int i = 0; i < n; ++i)
                     {
@@ -527,7 +526,7 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
         int t = 0;
 
         for (auto l : colour)
-            if (kit.lanes[(size_t) l].enabled && ! kit.lanes[(size_t) l].muted)
+            if (kit.lanes[(size_t) l].enabled)
                 t += kit.patterns[(size_t) l].hitCount();
 
         return t;
@@ -547,8 +546,7 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
             if (onlyLane >= 0 && idx != onlyLane)
                 continue;
 
-            if (! kit.lanes[(size_t) idx].enabled || kit.lanes[(size_t) idx].muted
-                || kit.lanes[(size_t) idx].locked)
+            if (! kit.lanes[(size_t) idx].enabled || kit.lanes[(size_t) idx].locked)
                 continue;
 
             const int hits = kit.patterns[(size_t) idx].hitCount();

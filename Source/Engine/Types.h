@@ -108,7 +108,6 @@ struct LaneSettings
 {
     bool enabled  = true;
     bool locked   = false;   // locked lanes are never touched by Generate
-    bool muted    = false;
     int  midiNote = 36;
     float gain    = 1.0f;    // velocity scaler, 0..1.5
 };

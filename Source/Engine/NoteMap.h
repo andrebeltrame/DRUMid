@@ -8,13 +8,22 @@ namespace drummy
 
 /** Where each lane lands on the keyboard.
 
-    This is the make-or-break detail for Drum Racks: the pattern is only useful
-    if it fires the right pad. Two factory maps cover almost every rack in the
-    wild, and Custom lets you dial in a rack that was built by hand.
+    Two workflows, two answers.
+
+    Driving a Drum Rack, the note *is* what separates the instruments, so every
+    lane needs its own note and the pattern is only useful if it fires the right
+    pad. That is what the GM and 4x4 maps are for.
+
+    Driving one Simpler per track, the routing separates the instruments and the
+    note carries no information at all - so every lane sits on C3, the root note
+    Simpler and Sampler default to. That is SingleNoteC3, and it is the default
+    because it is the workflow this plugin was built around: generate, then drag
+    each lane to its own track.
 */
 enum class NoteMapPreset
 {
-    GeneralMidi = 0,   // 36 kick / 39 clap / 42 closed / 46 open / 70 shaker
+    SingleNoteC3 = 0,  // every lane on C3 - one instrument per track
+    GeneralMidi,       // 36 kick / 39 clap / 45 tom / 42 closed / 46 open / ...
     DrumRack4x4,       // C1 upward, chromatic - matches a rack laid out by pad
     Custom,
     NumPresets

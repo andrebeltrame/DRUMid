@@ -1,20 +1,20 @@
 #include "StepGrid.h"
 #include "../Engine/NoteMap.h"
 #include "Icons.h"
+#include "../Engine/MidiExport.h"
 
 namespace drummy::ui
 {
 
 static constexpr int kIconX   = 8;
-static constexpr int kIconW   = 20;
-static constexpr int kNameX   = 34;
-static constexpr int kNameW   = 82;
-static constexpr int kNoteX   = 118;
+static constexpr int kIconW   = 22;
+static constexpr int kNameX   = 38;
+static constexpr int kNameW   = 78;
+static constexpr int kNoteX   = 120;
 static constexpr int kNoteW   = 34;
-static constexpr int kLockX   = 156;
-static constexpr int kMuteX   = 174;
-static constexpr int kReroll  = 192;
-static constexpr int kBtnW    = 16;
+static constexpr int kLockX   = 160;
+static constexpr int kReroll  = 182;
+static constexpr int kBtnW    = 18;
 
 StepGrid::StepGrid (DrummyAudioProcessor& p) : proc (p)
 {
@@ -105,7 +105,7 @@ void StepGrid::drawHeader (juce::Graphics& g, int lane, juce::Rectangle<int> row
     const auto& ls = proc.kit().lanes[(size_t) lane];
     const auto id = (LaneId) lane;
 
-    const bool dim = ! ls.enabled || ls.muted;
+    const bool dim = ! ls.enabled;
 
     Icons::drawLane (g, id,
                      juce::Rectangle<float> ((float) kIconX,
@@ -137,7 +137,6 @@ void StepGrid::drawHeader (juce::Graphics& g, int lane, juce::Rectangle<int> row
     };
 
     badge (kLockX,  "L", ls.locked, Colours::locked);
-    badge (kMuteX,  "M", ls.muted,  Colours::danger);
     badge (kReroll, "R", false,     Colours::accent);
 }
 
@@ -165,7 +164,7 @@ void StepGrid::drawCell (juce::Graphics& g, int lane, int step)
     auto hit = b.reduced (1.0f).translated (shift, 0.0f);
 
     const float vel = juce::jlimit (0.0f, 1.0f, st.velocity);
-    const bool dim = ! ls.enabled || ls.muted;
+    const bool dim = ! ls.enabled;
 
     auto colour = (vel < 0.5f ? Colours::accentSoft : Colours::accent)
                       .withMultipliedAlpha (dim ? 0.35f : 1.0f);
@@ -219,9 +218,9 @@ StepGrid::Hit StepGrid::hitTest (juce::Point<int> pos) const
     if (pos.x < headerWidth)
     {
         if (pos.x >= kLockX  && pos.x < kLockX  + kBtnW) h.kind = Hit::Lock;
-        else if (pos.x >= kMuteX  && pos.x < kMuteX  + kBtnW) h.kind = Hit::Mute;
         else if (pos.x >= kReroll && pos.x < kReroll + kBtnW) h.kind = Hit::Reroll;
         else if (pos.x >= kNoteX  && pos.x < kNoteX  + kNoteW) h.kind = Hit::Note;
+        else if (pos.x >= kIconX  && pos.x < kIconX  + kIconW) h.kind = Hit::Icon;
         else h.kind = Hit::Name;
 
         return h;
@@ -255,10 +254,6 @@ void StepGrid::mouseDown (const juce::MouseEvent& e)
             kit.lanes[(size_t) h.lane].locked = ! kit.lanes[(size_t) h.lane].locked;
             break;
 
-        case Hit::Mute:
-            kit.lanes[(size_t) h.lane].muted = ! kit.lanes[(size_t) h.lane].muted;
-            break;
-
         case Hit::Name:
             kit.lanes[(size_t) h.lane].enabled = ! kit.lanes[(size_t) h.lane].enabled;
             break;
@@ -270,6 +265,9 @@ void StepGrid::mouseDown (const juce::MouseEvent& e)
         case Hit::Note:
             dragStartNote = kit.lanes[(size_t) h.lane].midiNote;
             return;
+
+        case Hit::Icon:
+            return;   // a press on the icon starts a MIDI drag, it is not a click
 
         case Hit::Cell:
         {
@@ -304,6 +302,32 @@ void StepGrid::mouseDown (const juce::MouseEvent& e)
 void StepGrid::mouseDrag (const juce::MouseEvent& e)
 {
     auto& kit = proc.kit();
+
+    // Dragging a lane's icon exports that lane on its own, which is how one
+    // instrument gets onto one track.
+    if (dragOrigin.kind == Hit::Icon)
+    {
+        if (e.getDistanceFromDragStart() < 5)
+            return;
+
+        juce::String name;
+        name << "Drummy_" << genreName (proc.settings().genre)
+             << "_" << kit.bars() << "bar_"
+             << laneName ((LaneId) dragOrigin.lane)
+             << "_" << proc.settings().seed;
+
+        auto file = MidiExport::writeTempFile (kit, name, dragOrigin.lane);
+
+        if (file == juce::File())
+            return;
+
+        dragOrigin = Hit {};   // one drag per press
+
+        juce::DragAndDropContainer::performExternalDragDropOfFiles (
+            juce::StringArray (file.getFullPathName()), false, this, nullptr);
+
+        return;
+    }
 
     if (dragOrigin.kind == Hit::Note)
     {
