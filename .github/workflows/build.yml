@@ -1,0 +1,198 @@
+name: Build
+
+# Each platform compiles on its own platform - a Windows DLL only comes out of
+# Windows. A third job merges the two binaries into a single .vst3 bundle, which
+# is the download we publish: one file that works on both systems, so nobody
+# picks the wrong one.
+#
+# There is no macOS installer. Without an Apple certificate a .pkg only trades
+# one friction for a worse one; the zip plus the readme handles it better.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    name: macOS
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        # COPY_AFTER_BUILD is off: the CI machine has no DAW to install into.
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DDRUMID_COPY_AFTER_BUILD=OFF
+          -DDRUMID_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Engine tests
+        run: ./build/DrumidTests_artefacts/Release/DrumidTests
+
+      - name: Stage the plugin
+        run: |
+          VERSION=$(sed -n 's/^project(DRUMid VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          echo "VERSION=$VERSION"        >> "$GITHUB_ENV"
+          echo "PAYLOAD=DRUMid $VERSION" >> "$GITHUB_ENV"
+          mkdir -p "stage/DRUMid $VERSION" dist
+          cp -R "build/DRUMid_artefacts/Release/VST3/DRUMid.vst3" "stage/DRUMid $VERSION/"
+
+      - name: Check it is universal, and seal it
+        # JUCE writes Contents/Resources/moduleinfo.json after sealing the
+        # bundle, which leaves the signature invalid. A broken signature is
+        # refused by the system and the host skips the plugin in silence: it
+        # never shows up in the list and nothing anywhere says why. Re-signing
+        # here closes the seal with the manifest already inside.
+        run: |
+          bundle="stage/$PAYLOAD/DRUMid.vst3"
+          lipo -archs "$bundle/Contents/MacOS/DRUMid"
+          lipo -archs "$bundle/Contents/MacOS/DRUMid" | grep -q arm64
+          lipo -archs "$bundle/Contents/MacOS/DRUMid" | grep -q x86_64
+          codesign --force --sign - "$bundle"
+          codesign -v --strict "$bundle"
+
+      - name: Zip the bundle
+        run: ditto -c -k --keepParent --sequesterRsrc "stage/$PAYLOAD" "dist/DRUMid-$VERSION-macOS-VST3.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -A x64
+          -DDRUMID_COPY_AFTER_BUILD=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage the plugin
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path CMakeLists.txt -Pattern 'project\(DRUMid VERSION ([0-9.]+)').Matches[0].Groups[1].Value
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "PAYLOAD=DRUMid $version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          New-Item -ItemType Directory -Force -Path "stage\DRUMid $version", dist | Out-Null
+          Copy-Item -Recurse "build\DRUMid_artefacts\Release\VST3\DRUMid.vst3" "stage\DRUMid $version\"
+
+      - name: Check the plugin carries its own runtime
+        shell: pwsh
+        run: |
+          $dll = "stage\${env:PAYLOAD}\DRUMid.vst3\Contents\x86_64-win\DRUMid.vst3"
+          if (-not (Test-Path $dll)) { throw "No plugin at $dll" }
+          # The redistributable dependency only shows up when someone without it
+          # tries to load the plugin, so the import table is read here instead.
+          $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($dll))
+          foreach ($lib in 'VCRUNTIME140', 'MSVCP140') {
+            if ($text -match $lib) { throw "$dll still imports $lib - the runtime is not static" }
+          }
+          Write-Host "DRUMid : no Visual C++ redistributable needed."
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${env:VERSION}" `
+                  "/DPluginDir=$PWD\stage\${env:PAYLOAD}" `
+                  "/DOutputDir=$PWD\dist" `
+                  packaging\windows\drumid.iss
+
+      - name: Zip the bundle
+        shell: pwsh
+        run: Compress-Archive -Path "stage\${env:PAYLOAD}" -DestinationPath "dist\DRUMid-${env:VERSION}-Windows-VST3.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  universal:
+    name: One bundle for both
+    needs: [macos, windows]
+    # On macOS because the bundle has to be re-signed after the merge: the old
+    # seal does not cover the Windows folder that just went in.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: downloads/macos
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: downloads/windows
+
+      - name: Unpack
+        # The zips travel as files, so permissions and the macOS seal arrive
+        # intact - upload-artifact on its own would lose the execute bit.
+        run: |
+          VERSION=$(sed -n 's/^project(DRUMid VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          echo "VERSION=$VERSION"        >> "$GITHUB_ENV"
+          echo "PAYLOAD=DRUMid $VERSION" >> "$GITHUB_ENV"
+          mkdir -p mac win merged dist
+          ditto -x -k "downloads/macos/DRUMid-$VERSION-macOS-VST3.zip"     mac
+          unzip -q    "downloads/windows/DRUMid-$VERSION-Windows-VST3.zip" -d win
+
+      - name: Merge
+        run: |
+          mkdir -p "merged/$PAYLOAD"
+          sed "s/@VERSION@/$VERSION/g" packaging/README.txt  > "merged/$PAYLOAD/README.txt"
+          sed "s/@VERSION@/$VERSION/g" packaging/LEIA-ME.txt > "merged/$PAYLOAD/LEIA-ME.txt"
+          tools/merge-vst3.sh "mac/$PAYLOAD/DRUMid.vst3" "win/$PAYLOAD/DRUMid.vst3" "merged/$PAYLOAD"
+
+      - name: Check the merged bundle carries both platforms
+        run: |
+          bundle="merged/$PAYLOAD/DRUMid.vst3"
+          test -f "$bundle/Contents/MacOS/DRUMid"
+          test -f "$bundle/Contents/x86_64-win/DRUMid.vst3"
+          lipo -archs "$bundle/Contents/MacOS/DRUMid" | grep -q arm64
+          lipo -archs "$bundle/Contents/MacOS/DRUMid" | grep -q x86_64
+          codesign -v --strict "$bundle"
+
+      - name: Zip
+        # zip -X rather than ditto: whoever opens this on Windows does not see
+        # the __MACOSX folder ditto leaves behind. The seal survives - what
+        # signs the bundle are ordinary files, not extended attributes.
+        run: (cd merged && zip -q -r -X "../dist/DRUMid-$VERSION-VST3.zip" "$PAYLOAD")
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: universal
+          path: dist/*
+
+  release:
+    name: Release
+    needs: [macos, windows, universal]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes artifacts/*/*

@@ -14,7 +14,7 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 
 | | |
 |---|---|
-| Formats | VST3, Standalone (universal binary: arm64 + x86_64) |
+| Formats | VST3 — one bundle carrying macOS (arm64 + x86_64) and Windows x64 |
 | Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion, Perc 2 |
 | Genres | Organic House, Afro House, Indie Dance, Melodic House, Melodic Techno, Techno |
 | Seed bank | 157 curated patterns |
@@ -35,8 +35,34 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DDRUMID_BUILD_AU=ON
 cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j8
 ```
 
-JUCE 8.0.9 is pulled in automatically by CMake. The VST3 is copied to
-`~/Library/Audio/Plug-Ins/VST3/` on every build.
+JUCE 8.0.9 is pulled in automatically by CMake. The VST3 is copied into
+`~/Library/Audio/Plug-Ins/VST3/Nowhr Dynamics/` on every build; pass
+`-DDRUMID_COPY_AFTER_BUILD=OFF` to skip that.
+
+## Releasing
+
+A VST3 bundle keeps one binary per platform in its own folder — `Contents/MacOS`
+and `Contents/x86_64-win` — so a single bundle serves both systems and nobody
+has to pick the right download.
+
+A Windows DLL only comes out of Windows, so [the CI](.github/workflows/build.yml)
+builds each platform on its own runner and a third job merges them, re-signing
+the bundle afterwards. Adding a file inside `Contents` invalidates the
+signature, and a bundle with a broken signature is refused by the system and
+skipped by the host in silence — it never appears in the plugin list and nothing
+says why. Pushing a `v*` tag publishes the artifacts as a release.
+
+For a macOS-only build locally:
+
+```bash
+./packaging/make-release.sh
+```
+
+Hand it a Windows binary and it merges that in too:
+
+```bash
+./packaging/make-release.sh path/to/DRUMid.vst3
+```
 
 ## Tests
 

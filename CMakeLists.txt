@@ -1,9 +1,21 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(DRUMid VERSION 1.1.0 LANGUAGES C CXX)
+project(DRUMid VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (MSVC)
+    # The C++ runtime goes inside the plugin. Without this the DLL depends on
+    # the Visual C++ redistributable, and the failure only shows up on a machine
+    # that does not have it - as a plugin the host silently skips.
+    # Set before JUCE's targets exist, so they inherit it too.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    # The sources are UTF-8. Without this MSVC reads them as the system code
+    # page and quietly rewrites any non-ASCII character.
+    add_compile_options(/utf-8)
+endif()
 
 # Universal binary (Apple Silicon + Intel). Harmless on other platforms.
 if (APPLE)
