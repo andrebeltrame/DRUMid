@@ -1,0 +1,293 @@
+#include "PluginEditor.h"
+#include "Engine/MidiExport.h"
+
+using namespace drummy;
+using namespace drummy::ui;
+
+// ============================================================================
+//  MidiDragTile
+// ============================================================================
+
+MidiDragTile::MidiDragTile (DrummyAudioProcessor& p, int laneFilter, juce::String labelText)
+    : proc (p), lane (laneFilter), text (std::move (labelText))
+{
+    setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+}
+
+void MidiDragTile::paint (juce::Graphics& g)
+{
+    auto b = getLocalBounds().toFloat().reduced (0.5f);
+
+    g.setColour (hover ? Colours::panelLight.brighter (0.2f) : Colours::panelLight);
+    g.fillRoundedRectangle (b, 4.0f);
+    g.setColour (hover ? Colours::accent : Colours::outline);
+    g.drawRoundedRectangle (b, 4.0f, 1.0f);
+
+    g.setColour (hover ? Colours::accent : Colours::text);
+    g.setFont (juce::FontOptions (12.0f, juce::Font::bold));
+    g.drawText (text, getLocalBounds(), juce::Justification::centred, false);
+}
+
+void MidiDragTile::mouseEnter (const juce::MouseEvent&) { hover = true;  repaint(); }
+void MidiDragTile::mouseExit  (const juce::MouseEvent&) { hover = false; repaint(); }
+
+void MidiDragTile::mouseDrag (const juce::MouseEvent&)
+{
+    const auto& kit = proc.kit();
+
+    juce::String name = "Drummy_";
+    name << genreName (proc.settings().genre) << "_" << kit.bars() << "bar_"
+         << (lane < 0 ? juce::String ("kit") : juce::String (laneName ((LaneId) lane)))
+         << "_" << proc.settings().seed;
+
+    auto file = MidiExport::writeTempFile (kit, name, lane);
+
+    if (file == juce::File())
+        return;
+
+    juce::DragAndDropContainer::performExternalDragDropOfFiles (
+        juce::StringArray (file.getFullPathName()), false, this, nullptr);
+}
+
+// ============================================================================
+//  Editor
+// ============================================================================
+
+DrummyAudioProcessorEditor::DrummyAudioProcessorEditor (DrummyAudioProcessor& p)
+    : AudioProcessorEditor (&p), proc (p), grid (p), kitDrag (p, -1, "DRAG KIT MIDI")
+{
+    setLookAndFeel (&lnf);
+
+    buildControls();
+
+    addAndMakeVisible (grid);
+    addAndMakeVisible (kitDrag);
+
+    grid.onEdit = [this]
+    {
+        proc.publishKit();
+    };
+
+    grid.onNoteEdited = [this]
+    {
+        proc.publishKit();
+        noteMapBox.setSelectedId ((int) NoteMapPreset::Custom + 1, juce::dontSendNotification);
+    };
+
+    proc.kitChanged.addChangeListener (this);
+
+    setResizable (true, true);
+    setResizeLimits (760, 340, 1600, 720);
+    setSize (940, 400);
+
+    refreshFromProcessor();
+    startTimerHz (30);
+}
+
+DrummyAudioProcessorEditor::~DrummyAudioProcessorEditor()
+{
+    proc.kitChanged.removeChangeListener (this);
+    setLookAndFeel (nullptr);
+}
+
+juce::Slider& DrummyAudioProcessorEditor::addKnob (juce::Slider& s, juce::Label& l,
+                                                   const juce::String& name,
+                                                   double min, double max, double interval)
+{
+    s.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 54, 15);
+    s.setRange (min, max, interval);
+    addAndMakeVisible (s);
+
+    l.setText (name, juce::dontSendNotification);
+    l.setJustificationType (juce::Justification::centred);
+    l.setColour (juce::Label::textColourId, Colours::textDim);
+    l.setFont (juce::FontOptions (10.5f, juce::Font::bold));
+    addAndMakeVisible (l);
+
+    return s;
+}
+
+void DrummyAudioProcessorEditor::buildControls()
+{
+    titleLabel.setText ("DRUMMY", juce::dontSendNotification);
+    titleLabel.setFont (juce::FontOptions (21.0f, juce::Font::bold));
+    titleLabel.setColour (juce::Label::textColourId, Colours::accent);
+    addAndMakeVisible (titleLabel);
+
+    hintLabel.setText ("click a lane name to disable  -  L lock  -  M mute  -  R reroll  -  alt+drag a step for velocity  -  double click for ratchet",
+                       juce::dontSendNotification);
+    hintLabel.setFont (juce::FontOptions (10.5f));
+    hintLabel.setColour (juce::Label::textColourId, Colours::textDim);
+    addAndMakeVisible (hintLabel);
+
+    seedLabel.setFont (juce::FontOptions (11.0f));
+    seedLabel.setColour (juce::Label::textColourId, Colours::textDim);
+    seedLabel.setJustificationType (juce::Justification::centredRight);
+    addAndMakeVisible (seedLabel);
+
+    for (int i = 0; i < (int) Genre::NumGenres; ++i)
+        genreBox.addItem (genreName ((Genre) i), i + 1);
+
+    genreBox.onChange = [this]
+    {
+        proc.settings().genre = (Genre) (genreBox.getSelectedId() - 1);
+
+        // Each style has its own natural feel, so the swing follows the genre
+        // unless you move it yourself afterwards.
+        switch (proc.settings().genre)
+        {
+            case Genre::MelodicHouse: proc.settings().swing = 0.53f; break;
+            case Genre::OrganicHouse: proc.settings().swing = 0.56f; break;
+            case Genre::Techno:       proc.settings().swing = 0.50f; break;
+            default: break;
+        }
+
+        swing.setValue (proc.settings().swing, juce::dontSendNotification);
+        proc.generateAll (true);
+    };
+    addAndMakeVisible (genreBox);
+
+    for (int b : { 1, 2, 4 })
+        barsBox.addItem (juce::String (b) + (b == 1 ? " bar" : " bars"), b);
+
+    barsBox.onChange = [this]
+    {
+        proc.settings().bars = barsBox.getSelectedId();
+        proc.generateAll (false);
+    };
+    addAndMakeVisible (barsBox);
+
+    for (int i = 0; i < (int) NoteMapPreset::NumPresets; ++i)
+        noteMapBox.addItem (NoteMap::presetName ((NoteMapPreset) i), i + 1);
+
+    noteMapBox.onChange = [this]
+    {
+        proc.setNoteMapPreset ((NoteMapPreset) (noteMapBox.getSelectedId() - 1));
+        grid.repaint();
+    };
+    addAndMakeVisible (noteMapBox);
+
+    generateButton.onClick = [this] { proc.generateAll (true); };
+    generateButton.setColour (juce::TextButton::buttonColourId, Colours::accent);
+    generateButton.setColour (juce::TextButton::textColourOffId, Colours::background);
+    addAndMakeVisible (generateButton);
+
+    playButton.setClickingTogglesState (true);
+    playButton.setColour (juce::TextButton::buttonColourId, Colours::panelLight);
+    playButton.onClick = [this] { proc.setFreeRunEnabled (playButton.getToggleState()); };
+    addAndMakeVisible (playButton);
+
+    fillsButton.onClick = [this]
+    {
+        proc.settings().fills = fillsButton.getToggleState();
+        proc.generateAll (false);
+    };
+    addAndMakeVisible (fillsButton);
+
+    addKnob (energy,      energyLbl,      "ENERGY",   0.0, 1.0, 0.01);
+    addKnob (complexity,  complexityLbl,  "COMPLEX",  0.0, 1.0, 0.01);
+    addKnob (swing,       swingLbl,       "SWING",    0.5, 0.70, 0.005);
+    addKnob (humanTiming, humanTimingLbl, "TIMING",   0.0, 1.0, 0.01);
+    addKnob (humanVel,    humanVelLbl,    "DYNAMICS", 0.0, 1.0, 0.01);
+
+    energy.onValueChange      = [this] { proc.settings().energy      = (float) energy.getValue();      proc.generateAll (false); };
+    complexity.onValueChange  = [this] { proc.settings().complexity  = (float) complexity.getValue();  proc.generateAll (false); };
+    swing.onValueChange       = [this] { proc.settings().swing       = (float) swing.getValue();       proc.generateAll (false); };
+    humanTiming.onValueChange = [this] { proc.settings().humanTiming = (float) humanTiming.getValue(); proc.generateAll (false); };
+    humanVel.onValueChange    = [this] { proc.settings().humanVel    = (float) humanVel.getValue();    proc.generateAll (false); };
+}
+
+void DrummyAudioProcessorEditor::refreshFromProcessor()
+{
+    const auto& s = proc.settings();
+
+    genreBox.setSelectedId ((int) s.genre + 1, juce::dontSendNotification);
+    barsBox.setSelectedId (s.bars, juce::dontSendNotification);
+    noteMapBox.setSelectedId ((int) proc.noteMapPreset() + 1, juce::dontSendNotification);
+
+    energy.setValue (s.energy, juce::dontSendNotification);
+    complexity.setValue (s.complexity, juce::dontSendNotification);
+    swing.setValue (s.swing, juce::dontSendNotification);
+    humanTiming.setValue (s.humanTiming, juce::dontSendNotification);
+    humanVel.setValue (s.humanVel, juce::dontSendNotification);
+    fillsButton.setToggleState (s.fills, juce::dontSendNotification);
+    playButton.setToggleState (proc.freeRunEnabled(), juce::dontSendNotification);
+
+    seedLabel.setText ("seed " + juce::String (s.seed), juce::dontSendNotification);
+    grid.repaint();
+}
+
+void DrummyAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    refreshFromProcessor();
+}
+
+void DrummyAudioProcessorEditor::timerCallback()
+{
+    grid.setPlayStep (proc.currentStep());
+
+    // The free-run button is only meaningful when there is no host transport.
+    playButton.setEnabled (! proc.isHostPlaying());
+}
+
+void DrummyAudioProcessorEditor::paint (juce::Graphics& g)
+{
+    g.fillAll (Colours::background);
+
+    g.setColour (Colours::panel);
+    g.fillRect (0, 0, getWidth(), 44);
+    g.fillRect (0, 44, getWidth(), 78);
+
+    g.setColour (Colours::outline);
+    g.drawHorizontalLine (44, 0.0f, (float) getWidth());
+    g.drawHorizontalLine (122, 0.0f, (float) getWidth());
+}
+
+void DrummyAudioProcessorEditor::resized()
+{
+    auto area = getLocalBounds();
+
+    // ---- top bar
+    auto top = area.removeFromTop (44).reduced (10, 7);
+    titleLabel.setBounds (top.removeFromLeft (92));
+    genreBox.setBounds (top.removeFromLeft (150).reduced (0, 1));
+    top.removeFromLeft (8);
+    barsBox.setBounds (top.removeFromLeft (80).reduced (0, 1));
+    top.removeFromLeft (8);
+    noteMapBox.setBounds (top.removeFromLeft (140).reduced (0, 1));
+    seedLabel.setBounds (top.removeFromRight (90));
+    top.removeFromRight (8);
+    playButton.setBounds (top.removeFromRight (70).reduced (0, 1));
+
+    // ---- control strip
+    auto controls = area.removeFromTop (78).reduced (10, 6);
+
+    generateButton.setBounds (controls.removeFromLeft (128).reduced (0, 8));
+    controls.removeFromLeft (14);
+
+    auto knobArea = controls.removeFromLeft (5 * 76);
+
+    auto placeKnob = [&] (juce::Slider& s, juce::Label& l)
+    {
+        auto col = knobArea.removeFromLeft (76);
+        l.setBounds (col.removeFromTop (12));
+        s.setBounds (col);
+    };
+
+    placeKnob (energy, energyLbl);
+    placeKnob (complexity, complexityLbl);
+    placeKnob (swing, swingLbl);
+    placeKnob (humanTiming, humanTimingLbl);
+    placeKnob (humanVel, humanVelLbl);
+
+    controls.removeFromLeft (10);
+    fillsButton.setBounds (controls.removeFromLeft (70).withSizeKeepingCentre (70, 24));
+
+    kitDrag.setBounds (controls.removeFromRight (128).withSizeKeepingCentre (128, 30));
+
+    // ---- footer hint
+    hintLabel.setBounds (area.removeFromBottom (20).reduced (12, 2));
+
+    grid.setBounds (area.reduced (10, 6));
+}

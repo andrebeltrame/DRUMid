@@ -1,0 +1,9 @@
+build/
+Builds/
+JuceLibraryCode/
+.DS_Store
+*.xcodeproj
+*.xcworkspace
+.vscode/
+.cache/
+compile_commands.json
