@@ -10,8 +10,10 @@ static constexpr int kStepsPerBar = 16;   // 16th-note grid
 static constexpr int kMaxBars     = 4;
 static constexpr int kMaxSteps    = kStepsPerBar * kMaxBars;
 
-/** Ordered as an energy gradient, loosest to hardest, so scrolling the selector
-    is itself a musical move. */
+/** New genres are appended, never inserted: the saved state stores this as a
+    number, and renumbering would silently reopen someone's project on a
+    different genre. The order they appear in the selector is a separate list,
+    kGenreOrder below. */
 enum class Genre
 {
     OrganicHouse = 0,
@@ -20,8 +22,35 @@ enum class Genre
     MelodicHouse,
     MelodicTechno,
     Techno,
+    Cinematic,
+    ProgressiveHouse,
+    BigRoomEDM,
     NumGenres
 };
+
+static constexpr int kNumGenres = (int) Genre::NumGenres;
+
+/** Selector order: an energy gradient, loosest to hardest, so scrolling the
+    list is itself a musical move. Cinematic sits at the top because it is the
+    one that is not four-on-the-floor at all. */
+static constexpr Genre kGenreOrder[] =
+{
+    Genre::Cinematic,
+    Genre::OrganicHouse,
+    Genre::AfroHouse,
+    Genre::IndieDance,
+    Genre::MelodicHouse,
+    Genre::ProgressiveHouse,
+    Genre::MelodicTechno,
+    Genre::BigRoomEDM,
+    Genre::Techno,
+};
+
+static_assert (sizeof (kGenreOrder) / sizeof (kGenreOrder[0]) == (size_t) kNumGenres,
+               "every genre has to appear in the selector exactly once");
+
+/** Cinematic is half-time: the kick lands on 1 and 3, not on every quarter. */
+inline bool isHalfTime (Genre g) noexcept { return g == Genre::Cinematic; }
 
 /** Phase 1 lane set. The engine is written so adding lanes here plus seeds in
     PatternLibrary.cpp is all it takes to grow the kit. */
@@ -66,6 +95,9 @@ inline const char* genreName (Genre g) noexcept
         case Genre::MelodicHouse:  return "Melodic House";
         case Genre::MelodicTechno: return "Melodic Techno";
         case Genre::Techno:        return "Techno";
+        case Genre::Cinematic:     return "Cinematic";
+        case Genre::ProgressiveHouse: return "Progressive House";
+        case Genre::BigRoomEDM:    return "Big Room EDM";
         default:                   return "?";
     }
 }
@@ -167,6 +199,9 @@ inline float defaultSwingFor (Genre g) noexcept
         case Genre::MelodicHouse:  return 0.53f;
         case Genre::MelodicTechno: return 0.51f;
         case Genre::Techno:        return 0.50f;
+        case Genre::Cinematic:     return 0.50f;
+        case Genre::ProgressiveHouse: return 0.52f;
+        case Genre::BigRoomEDM:    return 0.50f;
         default:                   return 0.52f;
     }
 }

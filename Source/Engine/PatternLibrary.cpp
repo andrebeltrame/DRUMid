@@ -259,6 +259,117 @@ static const Seed kSeeds[] =
     { Genre::Techno,        LaneId::Percussion2, "single hit",      "........x.......",         0.0f, 1.0f, 2.2f },
     { Genre::Techno,        LaneId::Percussion2, "syncopated pair", "..x.........x...",         0.0f, 1.0f, 2.0f },
     { Genre::Techno,        LaneId::Percussion2, "3-against-4",     "..x..x..x..x....",         0.4f, 1.0f, 1.6f },
+
+    // ============================================================================
+    //  CINEMATIC
+    //
+    //  Half-time, and the only style here that is not four-on-the-floor: the
+    //  kick lands on 1 and 3 and the big backbeat lands on 3. The toms are the
+    //  lead voice, hats are nearly absent, and the space between the hits is
+    //  the point - so the seeds are sparse on purpose and the tom carries the
+    //  weight the hi-hat carries everywhere else.
+    // ============================================================================
+    { Genre::Cinematic, LaneId::Kick,       "half-time",        "X.......X.......",         0.0f, 1.0f, 3.5f },
+    { Genre::Cinematic, LaneId::Kick,       "with pickup",      "X.......X.....o.",         0.3f, 1.0f, 1.8f },
+    { Genre::Cinematic, LaneId::Kick,       "three hits",       "X.......X...X...",         0.5f, 1.0f, 1.5f },
+    { Genre::Cinematic, LaneId::Kick,       "one per bar",      "X...............",         0.0f, 0.4f, 1.5f },
+
+    { Genre::Cinematic, LaneId::Clap,       "big hit on 3",     "........X.......",         0.0f, 1.0f, 3.0f },
+    { Genre::Cinematic, LaneId::Clap,       "hit 3 + tail",     "........X.....o.",         0.3f, 1.0f, 1.5f },
+    { Genre::Cinematic, LaneId::Clap,       "double-time",      "....X.......X...",         0.6f, 1.0f, 1.2f },
+
+    { Genre::Cinematic, LaneId::Tom,        "tresillo taiko",   "X..X..X.........",         0.0f, 1.0f, 3.0f },
+    { Genre::Cinematic, LaneId::Tom,        "answer",           "X...X...X..X....",         0.3f, 1.0f, 2.5f },
+    { Genre::Cinematic, LaneId::Tom,        "rolling build",    "x.x.x.x.x.x.x.x.",         0.6f, 1.0f, 2.0f },
+    { Genre::Cinematic, LaneId::Tom,        "two heavy",        "X.....X.X.......",         0.0f, 0.8f, 2.0f },
+
+    { Genre::Cinematic, LaneId::ClosedHat,  "one tick",         "........x.......",         0.0f, 0.6f, 2.0f },
+    { Genre::Cinematic, LaneId::ClosedHat,  "sparse pulse",     "..x.....x.....x.",         0.2f, 1.0f, 1.8f },
+    { Genre::Cinematic, LaneId::ClosedHat,  "tension 8ths",     "x.x.x.x.x.x.x.x.",         0.8f, 1.0f, 1.2f },
+
+    { Genre::Cinematic, LaneId::OpenHat,    "bar tail",         "..............X.",         0.0f, 1.0f, 2.5f },
+    { Genre::Cinematic, LaneId::OpenHat,    "on 3",             "........X.......",         0.0f, 0.7f, 1.5f },
+
+    { Genre::Cinematic, LaneId::Shaker,     "sparse",           "...x........x...",         0.0f, 1.0f, 2.0f },
+    { Genre::Cinematic, LaneId::Shaker,     "quarters",         "x...x...x...x...",         0.4f, 1.0f, 1.5f },
+
+    { Genre::Cinematic, LaneId::Percussion, "single impact",    "X...............",         0.0f, 0.7f, 2.5f },
+    { Genre::Cinematic, LaneId::Percussion, "two impacts",      "X.......X.......",         0.2f, 1.0f, 2.2f },
+    { Genre::Cinematic, LaneId::Percussion, "offbeat metal",    "....X.......X...",         0.4f, 1.0f, 1.8f },
+
+    { Genre::Cinematic, LaneId::Percussion2,"late answer",      "..............X.",         0.0f, 1.0f, 2.2f },
+    { Genre::Cinematic, LaneId::Percussion2,"mid answer",       "......X.........",         0.0f, 1.0f, 2.0f },
+
+    // ============================================================================
+    //  PROGRESSIVE HOUSE
+    //
+    //  The wide, driving end of the house family: the offbeat open hat is the
+    //  engine, 16th hats sit under it, and the percussion rolls rather than
+    //  syncopates. Straighter and more relentless than melodic house.
+    // ============================================================================
+    { Genre::ProgressiveHouse, LaneId::Kick,       "four on the floor", "X...X...X...X...",                 0.0f, 1.0f, 3.5f },
+    { Genre::ProgressiveHouse, LaneId::Kick,       "ghost pickup",      "X...X...X...X..o",                 0.3f, 1.0f, 1.8f },
+    { Genre::ProgressiveHouse, LaneId::Kick,       "bar-end lift",      "X...X...X...X...X...X...X...X..x", 0.4f, 1.0f, 1.2f },
+
+    { Genre::ProgressiveHouse, LaneId::Clap,       "backbeat",          "....X.......X...",                 0.0f, 1.0f, 3.0f },
+    { Genre::ProgressiveHouse, LaneId::Clap,       "backbeat + ghost",  "....X...o...X...",                 0.4f, 1.0f, 1.8f },
+    { Genre::ProgressiveHouse, LaneId::Clap,       "push on 4",         "....X.......X..o",                 0.5f, 1.0f, 1.2f },
+
+    { Genre::ProgressiveHouse, LaneId::ClosedHat,  "offbeat 8ths",      "..x...x...x...x.",                 0.0f, 0.6f, 2.2f },
+    { Genre::ProgressiveHouse, LaneId::ClosedHat,  "16ths offbeat acc", "xoXoxoXoxoXoxoXo",                 0.3f, 1.0f, 2.5f },
+    { Genre::ProgressiveHouse, LaneId::ClosedHat,  "driving 16ths",     "oxoxoxoxoxoxoxox",                 0.4f, 1.0f, 2.2f },
+
+    { Genre::ProgressiveHouse, LaneId::OpenHat,    "offbeat",           "..X...X...X...X.",                 0.0f, 1.0f, 3.5f },
+    { Genre::ProgressiveHouse, LaneId::OpenHat,    "and of 2 and 4",    "......X.......X.",                 0.0f, 0.6f, 1.5f },
+
+    { Genre::ProgressiveHouse, LaneId::Tom,        "one per bar",       "..........x.....",                 0.0f, 0.8f, 2.0f },
+    { Genre::ProgressiveHouse, LaneId::Tom,        "answer pair",       "......x.......x.",                 0.3f, 1.0f, 1.8f },
+    { Genre::ProgressiveHouse, LaneId::Tom,        "rolling build",     "x.x.x.x.x.x.x.x.",                 0.7f, 1.0f, 1.2f },
+
+    { Genre::ProgressiveHouse, LaneId::Shaker,     "16ths",             "oxoxoxoxoxoxoxox",                 0.2f, 1.0f, 2.5f },
+    { Genre::ProgressiveHouse, LaneId::Shaker,     "offbeat 16ths",     ".x.x.x.x.x.x.x.x",                 0.0f, 0.8f, 2.0f },
+    { Genre::ProgressiveHouse, LaneId::Shaker,     "offbeat 8ths",      "..x...x...x...x.",                 0.0f, 0.7f, 1.8f },
+
+    { Genre::ProgressiveHouse, LaneId::Percussion, "offbeat conga",     "..x...x...x...x.",                 0.0f, 1.0f, 2.2f },
+    { Genre::ProgressiveHouse, LaneId::Percussion, "rolling 16ths",     "x..x..x...x.x...",                 0.3f, 1.0f, 2.0f },
+    { Genre::ProgressiveHouse, LaneId::Percussion, "sparse tick",       "...x......x.....",                 0.0f, 0.8f, 1.8f },
+
+    { Genre::ProgressiveHouse, LaneId::Percussion2,"far answer",        "......x.......x.",                 0.0f, 1.0f, 2.2f },
+    { Genre::ProgressiveHouse, LaneId::Percussion2,"backbeat tick",     "....x.......x...",                 0.0f, 1.0f, 2.0f },
+
+    // ============================================================================
+    //  BIG ROOM EDM
+    //
+    //  Festival main stage: everything serves the drop. Hats are the offbeat and
+    //  the 16th burst, the clap is layered and loud, and the tom exists to roll
+    //  into the next section. Percussion stays out of the way on purpose - there
+    //  is no room for a conga under a lead that wide.
+    // ============================================================================
+    { Genre::BigRoomEDM, LaneId::Kick,       "four on the floor", "X...X...X...X...",         0.0f, 1.0f, 4.0f },
+    { Genre::BigRoomEDM, LaneId::Kick,       "push into the bar", "X...X...X...X.x.",         0.5f, 1.0f, 1.5f },
+
+    { Genre::BigRoomEDM, LaneId::Clap,       "backbeat",          "....X.......X...",         0.0f, 1.0f, 3.5f },
+    { Genre::BigRoomEDM, LaneId::Clap,       "backbeat + roll",   "....X.......X.:.",         0.5f, 1.0f, 1.5f },
+
+    { Genre::BigRoomEDM, LaneId::ClosedHat,  "offbeat 8ths",      "..X...X...X...X.",         0.0f, 1.0f, 3.0f },
+    { Genre::BigRoomEDM, LaneId::ClosedHat,  "16ths accent 4",    "XoooxoooXoooxooo",         0.4f, 1.0f, 2.0f },
+    { Genre::BigRoomEDM, LaneId::ClosedHat,  "16th burst",        "xxxxxxxxxxxxxxxx",         0.7f, 1.0f, 1.5f },
+
+    { Genre::BigRoomEDM, LaneId::OpenHat,    "offbeat",           "..X...X...X...X.",         0.0f, 1.0f, 3.0f },
+    { Genre::BigRoomEDM, LaneId::OpenHat,    "bar lift",          "..............X.",         0.0f, 0.7f, 1.8f },
+
+    { Genre::BigRoomEDM, LaneId::Tom,        "roll into the bar", "............x.x.",         0.0f, 1.0f, 2.5f },
+    { Genre::BigRoomEDM, LaneId::Tom,        "build roll",        "x.x.x.x.x.x.x.x.",         0.6f, 1.0f, 2.0f },
+    { Genre::BigRoomEDM, LaneId::Tom,        "single accent",     "..........x.....",         0.0f, 0.7f, 1.5f },
+
+    { Genre::BigRoomEDM, LaneId::Shaker,     "offbeat",           "..x...x...x...x.",         0.0f, 1.0f, 2.2f },
+    { Genre::BigRoomEDM, LaneId::Shaker,     "16ths",             "oxoxoxoxoxoxoxox",         0.4f, 1.0f, 1.8f },
+
+    { Genre::BigRoomEDM, LaneId::Percussion, "sparse tick",       "...x......x.....",         0.0f, 1.0f, 2.2f },
+    { Genre::BigRoomEDM, LaneId::Percussion, "syncopated pair",   "......x.......x.",         0.0f, 1.0f, 2.0f },
+
+    { Genre::BigRoomEDM, LaneId::Percussion2,"late tick",         "..............x.",         0.0f, 1.0f, 2.2f },
+    { Genre::BigRoomEDM, LaneId::Percussion2,"mid tick",          "........x.......",         0.0f, 1.0f, 2.0f },
 };
 
 static constexpr int kNumSeeds = (int) (sizeof (kSeeds) / sizeof (kSeeds[0]));

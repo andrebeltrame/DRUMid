@@ -13,6 +13,12 @@ juce::MidiMessageSequence MidiExport::toSequence (const Kit& kit, int laneFilter
     const int numSteps = juce::jlimit (1, kMaxSteps, kit.numSteps);
     const int gate     = (int) (kTicksPerStep * 0.5);
 
+    // Nothing may cross the loop point. A note on the last step, nudged late by
+    // swing and carrying a gate, otherwise ends past the end of the pattern -
+    // and then the clip is a few ticks longer than the bars it claims to be,
+    // which puts Live's loop brace in the wrong place.
+    const double patternTicks = numSteps * kTicksPerStep;
+
     for (int laneIdx = 0; laneIdx < kNumLanes; ++laneIdx)
     {
         if (laneFilter >= 0 && laneFilter != laneIdx)
@@ -43,10 +49,14 @@ juce::MidiMessageSequence MidiExport::toSequence (const Kit& kit, int laneFilter
                 const float vel = juce::jlimit (0.02f, 1.0f, st.velocity * ls.gain * ratchetScale);
                 const auto  v   = (juce::uint8) juce::jlimit (1, 127, (int) std::lround (vel * 127.0f));
 
-                const double onTick = juce::jmax (0.0, tick);
+                const double onTick = juce::jlimit (0.0, patternTicks - 2.0, tick);
+                const double offTick = juce::jmin (onTick + gate, patternTicks - 1.0);
+
+                if (offTick <= onTick)
+                    continue;
 
                 seq.addEvent (juce::MidiMessage::noteOn  (1, ls.midiNote, v), onTick);
-                seq.addEvent (juce::MidiMessage::noteOff (1, ls.midiNote),    onTick + gate);
+                seq.addEvent (juce::MidiMessage::noteOff (1, ls.midiNote),    offTick);
             }
         }
     }
@@ -143,7 +153,8 @@ juce::File MidiExport::writeTempFile (const Kit& kit, const juce::String& baseNa
     file.setTicksPerQuarterNote (kTicksPerQuarter);
 
     // Keep the clip exactly as long as the pattern so Live loops it correctly
-    // instead of trimming to the last note.
+    // instead of trimming to the last note. toSequence already keeps every event
+    // inside this, so the end-of-track is the last event either way.
     const double endTick = juce::jlimit (1, kMaxSteps, kit.numSteps) * kTicksPerStep;
     seq.addEvent (juce::MidiMessage::endOfTrack(), endTick);
 

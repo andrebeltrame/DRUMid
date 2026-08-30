@@ -266,6 +266,9 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
                     case Genre::MelodicTechno: avoid = 0.75f; break;
                     case Genre::Techno:        avoid = 0.70f; break;
                     case Genre::IndieDance:    avoid = 0.45f; break;   // played, not placed
+                    case Genre::Cinematic:     avoid = 0.55f; break;
+                    case Genre::ProgressiveHouse: avoid = 0.40f; break;
+                    case Genre::BigRoomEDM:    avoid = 0.35f; break;
                     default:                   avoid = 0.35f; break;
                 }
 
@@ -400,7 +403,8 @@ static void applyGroove (LanePattern& p, LaneId lane, const GenSettings& s, Rng&
     }
 }
 
-static void applyBarVariation (LanePattern& p, LaneId lane, const GenSettings& s, Rng& rng)
+static void applyBarVariation (LanePattern& p, LaneId lane, const GenSettings& s, Rng& rng,
+                               bool mayAddGhosts)
 {
     const int bars = p.numSteps / kStepsPerBar;
 
@@ -443,9 +447,11 @@ static void applyBarVariation (LanePattern& p, LaneId lane, const GenSettings& s
                     st.clear();
                 }
             }
-            else if (lane != LaneId::Kick && lane != LaneId::Clap && (i % 4) != 0)
+            else if (mayAddGhosts && lane != LaneId::Kick && lane != LaneId::Clap && (i % 4) != 0)
             {
-                // Answer with a new ghost, off the beat only.
+                // Answer with a new ghost, off the beat only - but never on a
+                // lane this genre wants quiet. Filling the gaps in a cinematic
+                // hi-hat removes the exact thing the style is made of.
                 st = Step { true, 0.32f + rng.uni() * 0.18f, 0.0f, 0.85f, 1 };
             }
         }
@@ -555,6 +561,40 @@ static float laneImportance (Genre genre, LaneId lane)
                 default:                  return 1.0f;
             }
 
+        case Genre::Cinematic:
+            // The toms carry this one the way the hi-hat carries the others, so
+            // the hats are the first thing to step back when the kit is full.
+            switch (lane)
+            {
+                case LaneId::Tom:         return 2.2f;
+                case LaneId::Percussion:  return 1.4f;
+                case LaneId::Percussion2: return 1.1f;
+                case LaneId::Shaker:      return 0.7f;
+                case LaneId::ClosedHat:   return 0.5f;
+                case LaneId::OpenHat:     return 0.5f;
+                default:                  return 1.0f;
+            }
+
+        case Genre::ProgressiveHouse:
+            switch (lane)
+            {
+                case LaneId::OpenHat:     return 1.4f;   // the offbeat hat is the engine
+                case LaneId::ClosedHat:   return 1.4f;
+                case LaneId::Shaker:      return 1.1f;
+                case LaneId::Percussion:  return 1.0f;
+                case LaneId::Tom:         return 0.8f;
+                default:                  return 1.0f;
+            }
+
+        case Genre::BigRoomEDM:
+            switch (lane)
+            {
+                case LaneId::ClosedHat:   return 1.5f;
+                case LaneId::OpenHat:     return 1.3f;
+                case LaneId::Tom:         return 0.9f;
+                default:                  return 0.8f;   // nothing crowds the drop
+            }
+
         case Genre::MelodicHouse:
             switch (lane)
             {
@@ -596,7 +636,11 @@ static void applyEnergyBudget (Kit& kit, const GenSettings& s, int onlyLane = -1
     };
 
     const int bars = kit.numSteps / kStepsPerBar;
-    const int budget = (int) ((6.0f + s.energy * 32.0f) * (float) bars);
+
+    // Cinematic is not a busier or quieter version of the others - it is built
+    // out of space, so the same Energy has to buy far fewer hits there.
+    const float genreScale = (s.genre == Genre::Cinematic) ? 0.55f : 1.0f;
+    const int budget = (int) ((6.0f + s.energy * 32.0f) * (float) bars * genreScale);
 
     auto totalHits = [&]
     {
@@ -692,7 +736,8 @@ static void buildLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed
 
     applyDensity (kit.patterns[(size_t) idx], lane, s, rng);
     applyCompatibility (kit, lane, s, rng);
-    applyBarVariation (kit.patterns[(size_t) idx], lane, s, rng);
+    applyBarVariation (kit.patterns[(size_t) idx], lane, s, rng,
+                       laneImportance (s.genre, lane) >= 1.0f);
     applyFill (kit, lane, s, rng);
     applyGroove (kit.patterns[(size_t) idx], lane, s, rng,
                  kit.lanes[(size_t) idx].dynamics);

@@ -189,10 +189,9 @@ void DrumidAudioProcessorEditor::buildControls()
     brandButton.setTooltip ("About DRUMid");
     addAndMakeVisible (brandButton);
 
-    hintLabel.setText ("the reload arrow redoes just that drum  -  the padlock keeps GENERATE away from it  -  "
-                       "drag DYN for how much its velocity moves  -  click the name to disable  -  "
-                       "drag the icon to export the lane  -  alt+drag a step for velocity  -  "
-                       "double click for ratchet",
+    hintLabel.setText ("reload redoes one drum  -  padlock locks it  -  drag DYN for velocity spread  -  "
+                       "click a name to disable  -  drag an icon to export that lane  -  "
+                       "alt+drag a step for velocity  -  double click for ratchet",
                        juce::dontSendNotification);
     hintLabel.setFont (juce::FontOptions (10.5f));
     hintLabel.setColour (juce::Label::textColourId, Colours::textDim);
@@ -203,8 +202,10 @@ void DrumidAudioProcessorEditor::buildControls()
     seedLabel.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (seedLabel);
 
-    for (int i = 0; i < (int) Genre::NumGenres; ++i)
-        genreBox.addItem (genreName ((Genre) i), i + 1);
+    // Listed in kGenreOrder, which is the musical order; the item id stays the
+    // enum value, so the saved state does not depend on how the list is sorted.
+    for (auto g : kGenreOrder)
+        genreBox.addItem (genreName (g), (int) g + 1);
 
     genreBox.onChange = [this]
     {

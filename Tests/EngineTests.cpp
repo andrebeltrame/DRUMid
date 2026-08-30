@@ -76,8 +76,24 @@ int main()
         auto organic = makeKit (Genre::OrganicHouse, 0.55f, 0.55f, 777,   2);
         auto techno  = makeKit (Genre::Techno,       0.75f, 0.50f, 4242,  2);
 
-        for (int gi = 0; gi < (int) Genre::NumGenres; ++gi)
-            dump (genreName ((Genre) gi), makeKit ((Genre) gi, 0.6f, 0.5f, 1000 + gi * 37, 2));
+        for (auto g : kGenreOrder)
+            dump (genreName (g), makeKit (g, 0.6f, 0.5f, 1000 + (int) g * 37, 2));
+
+        // Every genre must appear in the selector exactly once, or one of them
+        // is unreachable from the UI even though its seeds sit in the bank.
+        {
+            bool listed[kNumGenres] = {};
+
+            for (auto g : kGenreOrder)
+                listed[(int) g] = true;
+
+            bool all = true;
+
+            for (bool b : listed)
+                all = all && b;
+
+            check (all, "every genre appears in the selector");
+        }
 
         std::printf ("\n");
 
@@ -88,15 +104,21 @@ int main()
             const auto genre = (Genre) gi;
             const auto kit = makeKit (genre, 0.6f, 0.5f, 1000 + gi * 37, 2);
 
+            // Cinematic is half-time - the kick is on 1 and 3 - so it is checked
+            // against its own stride rather than four-on-the-floor's.
+            const int stride = isHalfTime (genre) ? 8 : 4;
+
             int downbeats = 0;
 
-            for (int i = 0; i < kit.numSteps; i += 4)
+            for (int i = 0; i < kit.numSteps; i += stride)
                 if (kit.patterns[(size_t) LaneId::Kick].steps[(size_t) i].on)
                     ++downbeats;
 
             // The end-of-phrase fill is allowed to drop exactly one.
-            check (downbeats >= kit.numSteps / 4 - 1,
-                   juce::String (genreName (genre)) + ": kick lands on the quarters");
+            check (downbeats >= kit.numSteps / stride - 1,
+                   juce::String (genreName (genre))
+                     + (isHalfTime (genre) ? ": kick lands on 1 and 3"
+                                           : ": kick lands on the quarters"));
 
             bool everyLaneHasSeeds = true;
 
@@ -383,6 +405,23 @@ int main()
             const double patternTicks = kit.numSteps * 960 * 0.25;
             check (std::abs (track->getEndTime() - patternTicks) < 1.0,
                    "the clip is exactly " + juce::String (kit.bars()) + " bars long");
+
+            // No event may sit past the loop point, or the clip is longer than
+            // the bars it claims and Live's loop brace lands in the wrong place.
+            bool insideTheLoop = true;
+
+            for (int i = 0; i < track->getNumEvents(); ++i)
+            {
+                const auto* ev = track->getEventPointer (i);
+
+                if (ev->message.isMetaEvent())
+                    continue;
+
+                if (ev->message.getTimeStamp() > patternTicks)
+                    insideTheLoop = false;
+            }
+
+            check (insideTheLoop, "no note crosses the loop point");
 
             // Notes must land on the lanes' mapped pads, not somewhere random.
             bool notesInMap = true;

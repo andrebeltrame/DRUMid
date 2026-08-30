@@ -80,14 +80,18 @@ int main (int argc, char** argv)
 
     struct Shot { Genre genre; float energy; float complexity; int bars; const char* name; };
 
+    // One per genre, in the order the selector lists them.
     const Shot shots[] =
     {
-        { Genre::OrganicHouse,  0.60f, 0.60f, 2, "drumid-organic-house"  },
-        { Genre::AfroHouse,     0.65f, 0.60f, 2, "drumid-afro-house"     },
-        { Genre::IndieDance,    0.55f, 0.50f, 2, "drumid-indie-dance"    },
-        { Genre::MelodicHouse,  0.55f, 0.40f, 2, "drumid-melodic-house"  },
-        { Genre::MelodicTechno, 0.50f, 0.45f, 2, "drumid-melodic-techno" },
-        { Genre::Techno,        0.60f, 0.50f, 2, "drumid-techno"         },
+        { Genre::Cinematic,        0.55f, 0.45f, 2, "drumid-cinematic"         },
+        { Genre::OrganicHouse,     0.60f, 0.60f, 2, "drumid-organic-house"     },
+        { Genre::AfroHouse,        0.65f, 0.60f, 2, "drumid-afro-house"        },
+        { Genre::IndieDance,       0.55f, 0.50f, 2, "drumid-indie-dance"       },
+        { Genre::MelodicHouse,     0.55f, 0.40f, 2, "drumid-melodic-house"     },
+        { Genre::ProgressiveHouse, 0.60f, 0.45f, 2, "drumid-progressive-house" },
+        { Genre::MelodicTechno,    0.50f, 0.45f, 2, "drumid-melodic-techno"    },
+        { Genre::BigRoomEDM,       0.60f, 0.45f, 2, "drumid-big-room-edm"      },
+        { Genre::Techno,           0.60f, 0.50f, 2, "drumid-techno"            },
     };
 
     // Lane header states, for checking the padlock and for the manual.
