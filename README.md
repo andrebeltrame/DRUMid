@@ -16,8 +16,8 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 |---|---|
 | Formats | VST3 — one bundle carrying macOS (arm64 + x86_64) and Windows x64 |
 | Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion, Perc 2 |
-| Genres | Organic House, Afro House, Indie Dance, Melodic House, Melodic Techno, Techno |
-| Seed bank | 157 curated patterns |
+| Genres | Cinematic, Organic House, Afro House, Indie Dance, Melodic House, Progressive House, Melodic Techno, Big Room EDM, Techno |
+| Seed bank | 220 curated patterns |
 | Pattern length | 1, 2 or 4 bars |
 
 ![Afro House](docs/drumid-afro-house.png)
@@ -168,8 +168,22 @@ and only the unlocked lanes change.
   clave 3-2, E(5,16) and E(7,16). Clap often only on 4. Heavier swing and much
   wider velocity spread, which is what makes it sound played rather than
   programmed.
+- **Progressive House** — the wide, driving end of the house family: the offbeat
+  open hat is the engine, 16th hats sit under it, and the percussion rolls rather
+  than syncopates.
+- **Big Room EDM** — festival main stage, everything serving the drop: offbeat
+  hat and 16th bursts, a loud layered clap, toms that exist to roll into the next
+  section, percussion kept deliberately out of the way.
 - **Techno** — straight, zero swing, closed hat on the offbeat, sparse
   syncopated metal placed between the kicks, 32nd ratchet rolls into the phrase.
+
+**Cinematic** sits apart from the rest, which is why it is listed first. It is
+the only style here that is not four-on-the-floor: half-time, kick on 1 and 3,
+the big backbeat on 3, the toms as the lead voice and the hats nearly absent.
+Because it is built out of space rather than density, the same Energy buys it
+far fewer hits, and bar-to-bar variation will not add ghost notes to the lanes
+the style wants quiet — filling the gaps in a cinematic hi-hat removes the exact
+thing the style is made of.
 
 ## The two buttons
 
