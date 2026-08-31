@@ -319,6 +319,51 @@ int main()
             check (loose > steady, "per-lane dynamics widens that element's velocity spread");
         }
 
+        // The answering lanes must actually answer. A tom or a cymbal repeating
+        // the identical bar is what makes a whole kit read as a loop.
+        {
+            auto barsDiffer = [] (Genre genre, LaneId lane)
+            {
+                int varied = 0;
+                const int runs = 24;
+
+                for (int t = 0; t < runs; ++t)
+                {
+                    const auto kit = makeKit (genre, 0.6f, 0.5f, 3000 + t, 2);
+                    const auto& p = kit.patterns[(size_t) lane];
+
+                    if (p.hitCount() == 0)
+                        continue;
+
+                    for (int i = 0; i < kStepsPerBar; ++i)
+                        if (p.steps[(size_t) i].on != p.steps[(size_t) (i + kStepsPerBar)].on)
+                        { ++varied; break; }
+                }
+
+                return (float) varied / (float) runs;
+            };
+
+            float worstTom = 1.0f, worstHat = 1.0f;
+            const char* worstTomName = "";
+            const char* worstHatName = "";
+
+            for (auto g : kGenreOrder)
+            {
+                const float tom = barsDiffer (g, LaneId::Tom);
+                const float hat = barsDiffer (g, LaneId::OpenHat);
+
+                if (tom < worstTom) { worstTom = tom; worstTomName = genreName (g); }
+                if (hat < worstHat) { worstHat = hat; worstHatName = genreName (g); }
+            }
+
+            std::printf ("       bar 2 answers bar 1 - worst tom: %.0f%% (%s), "
+                         "worst open hat: %.0f%% (%s)\n",
+                         worstTom * 100.0f, worstTomName, worstHat * 100.0f, worstHatName);
+
+            check (worstTom > 0.7f, "the tom answers itself in every genre");
+            check (worstHat > 0.7f, "the open hat answers itself in every genre");
+        }
+
         // Swing has to be real micro-timing, not a quantised lie.
         float maxMicro = 0.0f;
 

@@ -78,6 +78,108 @@ static LanePattern pickSeed (Genre genre, LaneId lane, float energy, int numStep
     return PatternLibrary::fromGrid (seeds.back()->grid, numSteps);
 }
 
+/** Bar-level phrasing for the two lanes that are supposed to answer themselves.
+
+    A seed is one bar wide and gets tiled, so a kick or a hat repeating is fine -
+    that is what those lanes do. A tom or a cymbal repeating the identical figure
+    every bar is what makes the whole kit read as a loop, because those are
+    exactly the voices a drummer uses to reply to the previous bar.
+
+    Three replies, chosen at random: a different figure entirely, the same figure
+    landing somewhere else, or the same figure with one hit added or taken away.
+*/
+static void applyPhraseVariation (LanePattern& p, LaneId lane, const GenSettings& s, Rng& rng)
+{
+    if (lane != LaneId::Tom && lane != LaneId::OpenHat)
+        return;
+
+    const int bars = p.numSteps / kStepsPerBar;
+
+    if (bars < 2)
+        return;
+
+    // Complexity decides how often the answer differs; even at zero the last bar
+    // of the phrase still gets one, or four-bar patterns crawl.
+    const float chance = 0.45f + s.complexity * 0.45f;
+
+    for (int bar = 1; bar < bars; ++bar)
+    {
+        const bool lastBar = bar == bars - 1;
+
+        if (! lastBar && ! rng.chance (chance))
+            continue;
+
+        const int off = bar * kStepsPerBar;
+
+        switch (rng.below (3))
+        {
+            case 0:
+            {
+                // A different figure. Two-bar seeds contribute either half, so
+                // the reply can come from the back end of one.
+                auto alt = pickSeed (s.genre, lane, s.energy, kStepsPerBar * 2, rng);
+                const int half = rng.below (2) * kStepsPerBar;
+
+                for (int i = 0; i < kStepsPerBar; ++i)
+                    p.steps[(size_t) (off + i)] = alt.steps[(size_t) (half + i)];
+
+                break;
+            }
+
+            case 1:
+            {
+                // The same shape, displaced. Rotating rather than shifting keeps
+                // the hit count, so the answer has the same weight as the call.
+                const int shift = 1 + rng.below (5);
+
+                std::array<Step, kStepsPerBar> src {};
+
+                for (int i = 0; i < kStepsPerBar; ++i)
+                    src[(size_t) i] = p.steps[(size_t) (off + i)];
+
+                for (int i = 0; i < kStepsPerBar; ++i)
+                    p.steps[(size_t) (off + (i + shift) % kStepsPerBar)] = src[(size_t) i];
+
+                break;
+            }
+
+            default:
+            {
+                // One hit more, or one hit fewer.
+                if (rng.chance (0.5f))
+                {
+                    for (int tries = 0; tries < 8; ++tries)
+                    {
+                        const int i = rng.below (kStepsPerBar);
+
+                        if (! p.steps[(size_t) (off + i)].on)
+                        {
+                            p.steps[(size_t) (off + i)] = Step { true, 0.6f + rng.uni() * 0.3f,
+                                                                 0.0f, 1.0f, 1 };
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int tries = 0; tries < 8; ++tries)
+                    {
+                        const int i = rng.below (kStepsPerBar);
+
+                        if (p.steps[(size_t) (off + i)].on)
+                        {
+                            p.steps[(size_t) (off + i)].clear();
+                            break;
+                        }
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+}
+
 // ============================================================================
 //  Layer 2 - compatibility rules
 //
@@ -299,6 +401,69 @@ static void applyCompatibility (Kit& kit, LaneId lane, const GenSettings& s, Rng
 
         default:
             break;
+    }
+}
+
+/** Last word on the answering lanes: if a bar still matches the first one, move
+    one of its hits.
+
+    applyPhraseVariation runs before the compatibility pass so that a re-seeded
+    bar gets dodged around the kick like any other - but that pass can then undo
+    the work. In cinematic the kick is on 1 and 3, so the rule that lifts an open
+    hat off the kick moves both bars by the same step and lands them back in
+    unison. This runs afterwards and only where the answer failed.
+
+    It skips steps the kick is on, so fixing the repetition cannot reintroduce
+    the collision the compatibility pass just removed.
+*/
+static void ensureBarsAnswer (Kit& kit, LaneId lane, Rng& rng)
+{
+    if (lane != LaneId::Tom && lane != LaneId::OpenHat)
+        return;
+
+    auto& p = kit.patterns[(size_t) lane];
+    const auto& kick = kit.patterns[(size_t) LaneId::Kick];
+
+    const int bars = p.numSteps / kStepsPerBar;
+
+    for (int bar = 1; bar < bars; ++bar)
+    {
+        const int off = bar * kStepsPerBar;
+
+        bool same = true;
+
+        for (int i = 0; i < kStepsPerBar && same; ++i)
+            if (p.steps[(size_t) i].on != p.steps[(size_t) (off + i)].on)
+                same = false;
+
+        if (! same)
+            continue;
+
+        // Find a hit in this bar and walk it to a free step nearby.
+        for (int attempt = 0; attempt < kStepsPerBar; ++attempt)
+        {
+            const int from = (rng.below (kStepsPerBar) + attempt) % kStepsPerBar;
+
+            if (! p.steps[(size_t) (off + from)].on)
+                continue;
+
+            for (int delta : { 1, -1, 2, -2, 3, -3, 4 })
+            {
+                const int to = from + delta;
+
+                if (to < 0 || to >= kStepsPerBar)
+                    continue;
+
+                if (p.steps[(size_t) (off + to)].on || kick.steps[(size_t) (off + to)].on)
+                    continue;
+
+                p.steps[(size_t) (off + to)] = p.steps[(size_t) (off + from)];
+                p.steps[(size_t) (off + from)].clear();
+                break;
+            }
+
+            break;
+        }
     }
 }
 
@@ -735,7 +900,9 @@ static void buildLane (Kit& kit, LaneId lane, const GenSettings& s, int laneSeed
     kit.patterns[(size_t) idx] = p;
 
     applyDensity (kit.patterns[(size_t) idx], lane, s, rng);
+    applyPhraseVariation (kit.patterns[(size_t) idx], lane, s, rng);
     applyCompatibility (kit, lane, s, rng);
+    ensureBarsAnswer (kit, lane, rng);
     applyBarVariation (kit.patterns[(size_t) idx], lane, s, rng,
                        laneImportance (s.genre, lane) >= 1.0f);
     applyFill (kit, lane, s, rng);

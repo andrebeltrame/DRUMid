@@ -370,6 +370,106 @@ static const Seed kSeeds[] =
 
     { Genre::BigRoomEDM, LaneId::Percussion2,"late tick",         "..............x.",         0.0f, 1.0f, 2.2f },
     { Genre::BigRoomEDM, LaneId::Percussion2,"mid tick",          "........x.......",         0.0f, 1.0f, 2.0f },
+
+    // ============================================================================
+    //  TOM and OPEN HAT - the answering voices
+    //
+    //  These two are where a kit stops sounding like a loop, so they get the
+    //  widest bank and several two-bar seeds. A 32-step grid does not tile: the
+    //  second bar is written to differ from the first, which is the cheapest
+    //  possible cure for the repetition that one-bar seeds cause everywhere.
+    // ============================================================================
+
+    // ---- Cinematic
+    { Genre::Cinematic, LaneId::Tom, "call and answer",   "X..X..X.........X..X..X...X.X...", 0.0f, 1.0f, 2.5f },
+    { Genre::Cinematic, LaneId::Tom, "gathering",         "X.......X.......X...X...X.X.X...", 0.3f, 1.0f, 2.2f },
+    { Genre::Cinematic, LaneId::Tom, "triplet feel",      "X..X..X..X..X...", 0.2f, 1.0f, 2.0f },
+    { Genre::Cinematic, LaneId::Tom, "far apart",         "X...........X...", 0.0f, 0.6f, 1.8f },
+    { Genre::Cinematic, LaneId::Tom, "run into the bar",  "X.......X.....x.X.......x.xxXXXX", 0.5f, 1.0f, 1.8f },
+
+    { Genre::Cinematic, LaneId::OpenHat, "swell then rest", "..............X.................", 0.0f, 1.0f, 2.0f },
+    { Genre::Cinematic, LaneId::OpenHat, "answer on 3",     "........X...............X.......", 0.0f, 1.0f, 1.8f },
+    { Genre::Cinematic, LaneId::OpenHat, "two swells",      "......X.........X...............", 0.3f, 1.0f, 1.5f },
+
+    // ---- Organic house
+    { Genre::OrganicHouse, LaneId::Tom, "call and answer", "......x...........x...x.........", 0.0f, 1.0f, 2.2f },
+    { Genre::OrganicHouse, LaneId::Tom, "walking",         "..x.......x.....x.....x.........", 0.3f, 1.0f, 2.0f },
+    { Genre::OrganicHouse, LaneId::Tom, "tresillo pair",   "x..x..x.........", 0.2f, 1.0f, 2.0f },
+    { Genre::OrganicHouse, LaneId::Tom, "late push",       "..............x.", 0.0f, 0.8f, 1.8f },
+
+    { Genre::OrganicHouse, LaneId::OpenHat, "alternating bars", "......X.................X.......", 0.0f, 1.0f, 2.2f },
+    { Genre::OrganicHouse, LaneId::OpenHat, "three then one",   "..X...X...X.......X.............", 0.3f, 1.0f, 2.0f },
+    { Genre::OrganicHouse, LaneId::OpenHat, "on the a",         "...X.......X....", 0.2f, 1.0f, 1.8f },
+    { Genre::OrganicHouse, LaneId::OpenHat, "long short",       "..X.......X...X.", 0.4f, 1.0f, 1.6f },
+
+    // ---- Afro house
+    { Genre::AfroHouse, LaneId::Tom, "djembe answer",   "..x..x....x.......x..x....x.x...", 0.0f, 1.0f, 2.2f },
+    { Genre::AfroHouse, LaneId::Tom, "climbing",        "x.....x.....x.....x...x...x.x...", 0.4f, 1.0f, 2.0f },
+    { Genre::AfroHouse, LaneId::Tom, "off the clave",   "...x..x...x.....", 0.2f, 1.0f, 2.0f },
+    { Genre::AfroHouse, LaneId::Tom, "two low hits",    "x.......x.......", 0.0f, 0.7f, 1.8f },
+
+    { Genre::AfroHouse, LaneId::OpenHat, "call and rest",  "..X...X.................X.......", 0.0f, 1.0f, 2.2f },
+    { Genre::AfroHouse, LaneId::OpenHat, "on the a",       "...X.......X....", 0.2f, 1.0f, 2.0f },
+    { Genre::AfroHouse, LaneId::OpenHat, "pairs",          "..X.X.....X.X...", 0.4f, 1.0f, 1.8f },
+    { Genre::AfroHouse, LaneId::OpenHat, "every other bar","..X...X...X...X.................", 0.3f, 1.0f, 1.8f },
+
+    // ---- Indie dance
+    { Genre::IndieDance, LaneId::Tom, "live fill",      "....x..x............x..x....x.x.", 0.0f, 1.0f, 2.2f },
+    { Genre::IndieDance, LaneId::Tom, "floor pulse",    "......x.......x.", 0.0f, 1.0f, 2.0f },
+    { Genre::IndieDance, LaneId::Tom, "answer the snare","............x..x", 0.3f, 1.0f, 1.8f },
+    { Genre::IndieDance, LaneId::Tom, "roll out",       "................x.x.x.x.x.x.xxx.", 0.5f, 1.0f, 1.6f },
+
+    { Genre::IndieDance, LaneId::OpenHat, "offbeat then rest", "..X...X...X...X.......X.........", 0.0f, 1.0f, 2.2f },
+    { Genre::IndieDance, LaneId::OpenHat, "on the a",          "...X.......X....", 0.2f, 1.0f, 1.8f },
+    { Genre::IndieDance, LaneId::OpenHat, "late pair",         "..........X...X.", 0.3f, 1.0f, 1.6f },
+
+    // ---- Melodic house
+    { Genre::MelodicHouse, LaneId::Tom, "answer",        "..........x...............x.x...", 0.0f, 1.0f, 2.2f },
+    { Genre::MelodicHouse, LaneId::Tom, "two per phrase","......x.................x.......", 0.2f, 1.0f, 2.0f },
+    { Genre::MelodicHouse, LaneId::Tom, "late push",     "..............x.", 0.0f, 1.0f, 1.8f },
+
+    { Genre::MelodicHouse, LaneId::OpenHat, "offbeat then lift", "..X...X...X...X...X...X.......X.", 0.0f, 1.0f, 2.5f },
+    { Genre::MelodicHouse, LaneId::OpenHat, "on the a",          "...X.......X....", 0.2f, 1.0f, 2.0f },
+    { Genre::MelodicHouse, LaneId::OpenHat, "drop a bar",        "..X...X...X...X.................", 0.3f, 1.0f, 1.8f },
+    { Genre::MelodicHouse, LaneId::OpenHat, "pairs",             "..X.X.....X.X...", 0.5f, 1.0f, 1.5f },
+
+    // ---- Progressive house
+    { Genre::ProgressiveHouse, LaneId::Tom, "answer",       "..........x...............x.x...", 0.0f, 1.0f, 2.2f },
+    { Genre::ProgressiveHouse, LaneId::Tom, "build out",    "................x...x...x.x.x.x.", 0.5f, 1.0f, 2.0f },
+    { Genre::ProgressiveHouse, LaneId::Tom, "syncopated",   ".....x.....x....", 0.3f, 1.0f, 1.8f },
+
+    { Genre::ProgressiveHouse, LaneId::OpenHat, "offbeat then lift", "..X...X...X...X...X...X.......X.", 0.0f, 1.0f, 2.5f },
+    { Genre::ProgressiveHouse, LaneId::OpenHat, "drop a bar",        "..X...X...X...X.................", 0.3f, 1.0f, 2.0f },
+    { Genre::ProgressiveHouse, LaneId::OpenHat, "on the a",          "...X.......X....", 0.3f, 1.0f, 1.6f },
+
+    // ---- Melodic techno
+    { Genre::MelodicTechno, LaneId::Tom, "deep answer",   "........x.......................", 0.0f, 1.0f, 2.2f },
+    { Genre::MelodicTechno, LaneId::Tom, "every other",   "x.......x.......................", 0.2f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::Tom, "late run",      "..............................x.", 0.0f, 0.8f, 1.8f },
+    { Genre::MelodicTechno, LaneId::Tom, "pulse pair",    "....x.......x...", 0.4f, 1.0f, 1.6f },
+
+    { Genre::MelodicTechno, LaneId::OpenHat, "lift each phrase", "..............X.................", 0.0f, 1.0f, 2.2f },
+    { Genre::MelodicTechno, LaneId::OpenHat, "offbeat then rest","..X...X...X...X.......X.........", 0.3f, 1.0f, 2.0f },
+    { Genre::MelodicTechno, LaneId::OpenHat, "on the a",         "...X.......X....", 0.3f, 1.0f, 1.6f },
+
+    // ---- Big room EDM
+    { Genre::BigRoomEDM, LaneId::Tom, "roll then rest", "............x.x.................", 0.0f, 1.0f, 2.2f },
+    { Genre::BigRoomEDM, LaneId::Tom, "build out",      "................x...x...x.x.xxxx", 0.5f, 1.0f, 2.0f },
+    { Genre::BigRoomEDM, LaneId::Tom, "single accent",  "..........x.....", 0.0f, 1.0f, 1.6f },
+
+    { Genre::BigRoomEDM, LaneId::OpenHat, "offbeat then lift", "..X...X...X...X...X...X.......X.", 0.0f, 1.0f, 2.2f },
+    { Genre::BigRoomEDM, LaneId::OpenHat, "lift only",         "..............X.................", 0.0f, 1.0f, 2.0f },
+    { Genre::BigRoomEDM, LaneId::OpenHat, "pairs",             "..X.X.....X.X...", 0.5f, 1.0f, 1.5f },
+
+    // ---- Techno
+    { Genre::Techno, LaneId::Tom, "rolling then rest", "x.x.x.x.x.x.x.x.................", 0.4f, 1.0f, 2.0f },
+    { Genre::Techno, LaneId::Tom, "answer",            "....x.......x...................", 0.0f, 1.0f, 2.0f },
+    { Genre::Techno, LaneId::Tom, "hypnotic pair",     "......x.......x.", 0.3f, 1.0f, 1.8f },
+    { Genre::Techno, LaneId::Tom, "late run",          "..........................x.x.x.", 0.5f, 1.0f, 1.6f },
+
+    { Genre::Techno, LaneId::OpenHat, "offbeat then rest", "..X...X...X...X.......X.........", 0.0f, 1.0f, 2.2f },
+    { Genre::Techno, LaneId::OpenHat, "lift each phrase",  "..............X.................", 0.0f, 1.0f, 2.0f },
+    { Genre::Techno, LaneId::OpenHat, "on the a",          "...X.......X....", 0.3f, 1.0f, 1.6f },
 };
 
 static constexpr int kNumSeeds = (int) (sizeof (kSeeds) / sizeof (kSeeds[0]));

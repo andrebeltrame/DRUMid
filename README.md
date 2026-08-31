@@ -17,7 +17,7 @@ Phase 1 (vertical slice) — plugin loads, generates, plays in sync and exports.
 | Formats | VST3 — one bundle carrying macOS (arm64 + x86_64) and Windows x64 |
 | Lanes | Kick, Clap, Tom, Closed Hat, Open Hat, Shaker, Percussion, Perc 2 |
 | Genres | Cinematic, Organic House, Afro House, Indie Dance, Melodic House, Progressive House, Melodic Techno, Big Room EDM, Techno |
-| Seed bank | 220 curated patterns |
+| Seed bank | 284 curated patterns |
 | Pattern length | 1, 2 or 4 bars |
 
 ![Afro House](docs/drumid-afro-house.png)
@@ -142,6 +142,28 @@ gets repetitive:
 3. **Variation** — swing as real micro-timing, humanize, probability on ghost
    notes, 32nd ratchets, bar-to-bar mutation so 2 and 4 bar patterns don't read
    as a 1-bar loop, and end-of-phrase fills.
+
+### Phrasing: the answering lanes
+
+A seed is one bar wide and gets tiled, which is fine for a kick or a closed hat —
+repeating is what those lanes are *for*. It is not fine for the tom and the open
+hat, because those are exactly the voices a drummer uses to reply to the previous
+bar, and tiling them is what makes a whole kit read as a loop.
+
+So those two get bar-level phrasing on top of everything else. Each bar after the
+first may answer with a different figure, the same figure displaced, or the same
+figure with one hit added or taken away — and the last bar of the phrase always
+answers. They also have the widest seed banks, including two-bar seeds, which do
+not tile at all: their second bar is written to differ from the first.
+
+One catch worth knowing about, because it silently undid the whole thing at
+first: phrasing runs *before* the compatibility pass, so a re-seeded bar gets
+dodged around the kick like any other. But that pass can then re-align the bars —
+in cinematic the kick is on 1 and 3, so lifting the open hat off the kick moved
+both bars by the same step and landed them back in unison. A final check runs
+afterwards and moves one hit where the answer failed, skipping steps the kick is
+on so the fix cannot reintroduce the collision. Across every genre, bar 2 now
+differs from bar 1 in at least 92% of generated kits.
 
 Energy is a **shared budget across the kit**, not a per-lane setting. Without
 that, every colour lane independently answers "how busy should I be?" and at
