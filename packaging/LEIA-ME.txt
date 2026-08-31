@@ -1,9 +1,16 @@
 NOWHR DYNAMICS
-DRUMid @VERSION@ — macOS (VST3, universal arm64 + x86_64)
+DRUMid @VERSION@ — VST3 para macOS e Windows, num bundle só
 =============================================================
 
-Gerador de padrões de bateria em MIDI para melodic house, organic house,
-afro house, indie dance, melodic techno e techno.
+Gerador de padrões de bateria em MIDI para cinematic, organic house,
+afro house, indie dance, melodic house, progressive house, melodic
+techno, big room EDM e techno.
+
+O DRUMid.vst3 carrega as duas versões dentro dele — macOS universal
+(Apple Silicon e Intel) e Windows 64 bits — então a mesma pasta é a
+certa nos dois sistemas. Não há instalador: um bundle VST3 é uma pasta
+que se copia, e um instalador para copiar uma pasta é mais uma coisa
+para confiar sem ganho nenhum.
 
 O DRUMid não produz som nenhum. Ele gera os padrões e te entrega o MIDI —
 quem toca são os seus racks e samplers.
@@ -11,8 +18,8 @@ quem toca são os seus racks e samplers.
 Escolha as lanes, aperte GENERATE, arraste o MIDI para onde quiser.
 
 
-INSTALAÇÃO
-----------
+INSTALAÇÃO — macOS
+------------------
 
 1. Copie o DRUMid.vst3 para:
 
@@ -21,11 +28,27 @@ INSTALAÇÃO
    (No Finder: Ir > Ir para a pasta, e cole o caminho acima.)
 
 2. IMPORTANTE — o macOS coloca em quarentena tudo que chega dentro de um
-   .zip baixado. Abra o Terminal e rode:
+   .zip baixado. Enquanto a quarentena não sai, o plugin é pulado em
+   silêncio: não aparece na lista e nada explica por quê. Abra o
+   Terminal e rode:
 
        xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/DRUMid.vst3
 
 3. No Ableton Live: Preferências > Plug-Ins > Rescan.
+
+
+INSTALAÇÃO — Windows
+--------------------
+
+1. Copie a pasta DRUMid.vst3 inteira para:
+
+       C:\Program Files\Common Files\VST3\
+
+   Copie a pasta, não o arquivo de dentro dela — o bundle é uma pasta, e
+   tirar só o arquivo .vst3 de dentro deixa o plugin sem as partes de
+   que ele precisa.
+
+2. No Ableton Live: Opções > Preferências > Plug-Ins > Rescan.
 
 
 USANDO NO ABLETON
@@ -85,7 +108,11 @@ ligar/desligar é o único interruptor que faz sentido aqui.
 REQUISITOS
 ----------
 
-macOS 10.15 ou superior, Apple Silicon ou Intel. Qualquer host VST3.
+macOS 10.15 ou superior, Apple Silicon ou Intel.
+Windows 10 ou superior, 64 bits. Não precisa do Visual C++
+redistributable — o runtime vai dentro do plugin.
+
+Qualquer host VST3.
 
 
 Feito com JUCE.

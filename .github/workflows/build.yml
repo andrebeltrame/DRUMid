@@ -1,12 +1,16 @@
 name: Build
 
 # Each platform compiles on its own platform - a Windows DLL only comes out of
-# Windows. A third job merges the two binaries into a single .vst3 bundle, which
-# is the download we publish: one file that works on both systems, so nobody
-# picks the wrong one.
+# Windows. A third job merges the two binaries into a single .vst3 bundle, and
+# that merged bundle is the only thing published: one file that works on both
+# systems, so nobody can pick the wrong download.
 #
-# There is no macOS installer. Without an Apple certificate a .pkg only trades
-# one friction for a worse one; the zip plus the readme handles it better.
+# The per-platform zips exist to carry a build between jobs, not to be shipped.
+#
+# There are no installers on either side. On macOS a .pkg without an Apple
+# certificate only trades one friction for a worse one, and on Windows a VST3
+# bundle is a folder you copy - an installer to copy a folder is a second thing
+# to trust for no benefit.
 on:
   push:
     branches: [main]
@@ -101,18 +105,6 @@ jobs:
           }
           Write-Host "DRUMid : no Visual C++ redistributable needed."
 
-      - name: Install Inno Setup
-        run: choco install innosetup --no-progress -y
-
-      - name: Build the installer
-        shell: pwsh
-        run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          & $iscc "/DAppVersion=${env:VERSION}" `
-                  "/DPluginDir=$PWD\stage\${env:PAYLOAD}" `
-                  "/DOutputDir=$PWD\dist" `
-                  packaging\windows\drumid.iss
-
       - name: Zip the bundle
         shell: pwsh
         run: Compress-Archive -Path "stage\${env:PAYLOAD}" -DestinationPath "dist\DRUMid-${env:VERSION}-Windows-VST3.zip"
@@ -189,10 +181,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: universal
+          path: artifacts/universal
 
       - name: Publish
+        # Only the merged bundle. The per-platform zips are build intermediates,
+        # and publishing them next to it would put three downloads in front of
+        # someone who needs one.
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create "${GITHUB_REF_NAME}" --generate-notes artifacts/*/*
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes artifacts/universal/*

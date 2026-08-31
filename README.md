@@ -47,7 +47,10 @@ has to pick the right download.
 
 A Windows DLL only comes out of Windows, so [the CI](.github/workflows/build.yml)
 builds each platform on its own runner and a third job merges them, re-signing
-the bundle afterwards. Adding a file inside `Contents` invalidates the
+the bundle afterwards. That merged bundle is the only thing published — the
+per-platform zips are build intermediates, and shipping them alongside it would
+put three downloads in front of someone who needs one. There are no installers:
+a VST3 bundle is a folder you copy. Adding a file inside `Contents` invalidates the
 signature, and a bundle with a broken signature is refused by the system and
 skipped by the host in silence — it never appears in the plugin list and nothing
 says why. Pushing a `v*` tag publishes the artifacts as a release.
